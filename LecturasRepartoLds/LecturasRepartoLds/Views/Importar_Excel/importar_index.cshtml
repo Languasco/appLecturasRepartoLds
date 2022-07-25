@@ -1,0 +1,560 @@
+﻿
+@using DSIGE
+@using DSIGE.Modelo
+@using DSIGE.Negocio
+
+@{
+    ViewBag.Title = ".:: Importar Archivo  ::.";
+    Layout = "~/Views/Shared/_LayoutPrincipal.cshtml";
+}
+
+@section instances{
+
+    @Styles.Render("~/Content/dataTables-bootstrap/css/dataTables.bootstrap.min.css")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/jquery.dataTables.min.js")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/dataTables.bootstrap.min.js")
+
+    @Styles.Render("~/Content/bootstrap-datepicker/css/bootstrap-datepicker.min.css")
+    @Scripts.Render("~/Content/bootstrap-datepicker/js/bootstrap-datepicker.min.js")
+    @Scripts.Render("~/Content/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js")
+
+    @Scripts.Render("~/Content/bootstrap/js/bootstrap-filestyle.min.js")
+    @Scripts.Render("~/Scripts/jquery.fileDownload.js")
+    @Scripts.Render("~/Content/angular/angular.js")
+
+}
+
+@section styles{
+    <style type="text/css">
+        .nav-tabs {
+            border-bottom: 0;
+        }
+
+        #_archivo.btn-info {
+            background-image: none;
+            color: inherit;
+            background-color: inherit !important;
+        }
+
+        .modal-dialog {
+            width: 300px;
+        }
+
+        .datepicker {
+            width: 200px;
+        }
+
+ 
+        body {
+            font-size: 10.5px;
+            font-family: tahoma;
+        }
+
+        .label-primary {
+            background-color: #337ab7;
+            font-size: 11px;
+        }
+
+        .label-danger {
+            background-color: red;
+            font-size: 11px;
+        }
+
+        .resaltado {
+            color: red;
+            text-decoration: underline;
+        }
+
+        .julio .table, th {
+            background-color: #333 !important;
+            color: white !important;
+        }
+ 
+
+        .menuBoton, .ul .li {
+            list-style-type: none;
+            padding: 10px;
+            /*display: inline-table;*/
+            width: 200px !important;
+        }
+
+        .ui-pnotify-text {
+            display: block;
+            font-size: 13px !important;
+            font-weight: bold
+        }
+    </style>
+}
+
+@section scripts{
+
+    <script type="text/javascript">
+
+
+        function filterFloat(evt, input) {
+            var key = window.Event ? evt.which : evt.keyCode;
+
+
+            var chark = String.fromCharCode(key);
+            var tempValue = input.value + chark;
+            if (key >= 48 && key <= 58) {
+                if (filter(tempValue) === false) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                if (key == 8 || key == 13 || key == 0) {
+                    return true;
+                } else if (key == 46) {
+                    if (filter(tempValue) === false) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
+        function filter(__val__) {
+            var preg = /^([0-9]+\:?[0-9]{0,2})$/;
+            if (preg.test(__val__) === true) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+
+    </script>
+
+    <script type="text/javascript">
+
+        $(function () {
+            $('#idFechaRecepcion').datepicker({
+                format: 'dd/mm/yyyy',
+                language: 'es',
+                autoclose: true
+            });
+            $('#idFechaInicio').datepicker({
+                format: 'dd/mm/yyyy',
+                language: 'es',
+                autoclose: true
+            });
+            $('#idFechaTermino').datepicker({
+                format: 'dd/mm/yyyy',
+                language: 'es',
+                autoclose: true
+            });
+
+  
+        });
+
+        var app = angular.module('MyApp', []).directive('onFinishRender', function ($timeout) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attr) {
+                    if (scope.$last === true) {
+                        $timeout(function () {
+                            scope.$emit('ngRepeatFinished');
+                        });
+                    }
+                }
+            }
+        }).directive('fileModel', ['$parse', function ($parse) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attrs) {
+                    var model = $parse(attrs.fileModel);
+                    var modelSetter = model.assign;
+
+                    element.bind('change', function () {
+                        scope.$apply(function () {
+                            modelSetter(scope, element[0].files[0]);
+                        });
+                    });
+                }
+            };
+        }]);
+
+        app.service('fileUpload', ['$http', function ($http) {
+            this.uploadFileToUrl = function (idlocal, file, uploadUrl) {
+
+                var fd = new FormData();
+                fd.append('file', file);
+                fd.append('idlocal', idlocal);
+                $http.post(uploadUrl, fd, {
+
+                    transformRequest: angular.identity,
+                    headers: { 'Content-Type': undefined }
+                })
+                .success(function (data) {
+
+                })
+                .error(function () {
+
+                });
+
+            }
+        }]);
+
+        app.controller('MyController', function ($scope, $timeout, $http, fileUpload) {
+
+            $scope.myFile;
+
+            function MostrandoFechaSistemaActual() {
+                var fecha = new Date();
+                var ano = fecha.getFullYear();
+                var dia = fecha.getDate();
+                var mes = fecha.getMonth();
+
+                if (dia < 10) {
+                    dia = '0' + dia;
+                }
+                if (mes <= 9) {
+                    mes = '0' + (mes + 1);
+                } else {
+                    mes = (mes + 1);
+                }
+                return dia + '/' + mes + '/' + ano
+            }
+
+            $scope.obj_paramsForms = {
+                anio: '',
+                cantidad: '',
+                fechaRecepcion: MostrandoFechaSistemaActual(),
+
+                mes: '',
+                cantidadOrdinaria: '',
+                fechaInicio: MostrandoFechaSistemaActual(),
+
+                cargo: '',
+                cantidadReclamos: '',
+                fechaTermino: MostrandoFechaSistemaActual(),
+            }
+              
+            $scope.cant_archivosCargados = 0;
+            $scope.nombreArchivoCargados = '';
+            $scope.tipoReparto = 0;
+
+            $scope.subirArchivo = function () {
+                var btn_Guardar = document.getElementById('btn_guardar');
+                var btn_ver = document.getElementById('btn_ver');
+ 
+                if ($scope.myFile == null) {
+                    new PNotify({
+                        title: ' ',
+                        text: 'Por favor seleccione un Archivo para cargarlo..',
+                        type: 'error'
+                    });
+                } else {
+
+                    if ( String($scope.myFile.name).length > 15) {
+                        new PNotify({
+                            title: ' ',
+                            text: 'Verifique el archivo, el nombre no tiene la estructura de carga.',
+                            type: 'error'
+                        });
+                        return;
+                    }
+
+                    $('.sige-load').show();
+                    var file = $scope.myFile;
+                    var uploadUrl = '@Url.Action("InsertaExcel_lds")';
+
+                    var fd = new FormData();
+                        fd.append('file', file);
+
+                    $http.post(uploadUrl, fd,
+                    {
+                        transformRequest: angular.identity,
+                        headers: { 'Content-Type': undefined }
+                        }).success(function (res) {
+
+                        $('.sige-load').hide();
+
+                        if (res.ok) {
+
+                            if (res.data.length > 0) {
+
+                                btn_ver.disabled = true;
+                                btn_Guardar.disabled = false;
+
+                                $scope.cant_archivosCargados = res.data[0].cantidad;
+                                $scope.nombreArchivoCargados = res.data[0].nombreArchivo;
+                                              
+                                const anioArchivo = $scope.nombreArchivoCargados.substring(0, 4);
+                                const dataArchivoCargado = [...$scope.nombreArchivoCargados];
+                                const tipoFormato = dataArchivoCargado[8] + '' + dataArchivoCargado[9];
+
+                                $scope.tipoReparto = (tipoFormato == '00') ? 1 : 2;
+                                                
+                                $scope.obj_paramsForms = {
+                                    anio: anioArchivo,
+                                    cantidad: res.data[0].cantidad,
+                                    fechaRecepcion: MostrandoFechaSistemaActual(),
+
+                                    mes: dataArchivoCargado[4] +''+ dataArchivoCargado[5],
+                                    cantidadOrdinaria: tipoFormato == '00' ? res.data[0].cantidad : '' ,
+                                    fechaInicio: MostrandoFechaSistemaActual(),
+
+                                    cargo: dataArchivoCargado[6] + '' + dataArchivoCargado[7],
+                                    cantidadReclamos: tipoFormato == '02' ? res.data[0].cantidad : '',
+                                    fechaTermino: MostrandoFechaSistemaActual(),
+                                }
+                            }
+
+                        } else {
+                            $scope.cant_archivosCargados = 0;
+                            $scope.nombreArchivoCargados = '';
+                            $scope.tipoReparto = 0;
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                        .error(function () {
+                            $scope.cant_archivosCargados = 0;
+                            $scope.nombreArchivoCargados = '';
+                            $scope.tipoReparto = 0;
+                        alert('Ocurrio un problema con la conexion, vuelva a intentar.')
+                        $('.sige-load').hide();
+                    });
+
+                }
+            };
+
+            $scope.abrirModal_Asignacion = function () {
+                $('#modal-asignacion').modal('show');
+            }
+
+            $scope.Guardar_informacion = function () {
+
+                var btn_Guardar = document.getElementById('btn_guardar');                             
+
+                if ($scope.cant_archivosCargados == 0) {
+                    new PNotify({
+                        title: ' ',
+                        text: 'No se cargo correctamente el archivo, intente nuevamente..',
+                        type: 'error'
+                    });
+                    return;
+                }
+ 
+                if ($scope.obj_paramsForms.fechaRecepcion == '') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione o ingrese la Fecha Recepcion.',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsForms.fechaInicio == '') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione o ingrese la Fecha Inicio .',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsForms.fechaTermino == '') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione o ingrese la Fecha Termino.',
+                        type: 'error'
+                    });
+                    return;
+                }
+                
+
+                (new PNotify({
+                    title: 'Sistemas Confirmación ',
+                    text: 'Desea guardar la informacion ?',
+                    icon: 'glyphicon glyphicon-question-sign',
+                    hide: false,
+                    confirm: {
+                        confirm: true
+                    },
+                    buttons: {
+                        closer: false,
+                        sticker: false
+                    },
+                    history: {
+                        history: false
+                    }
+                })).get().on('pnotify.confirm', function () {
+
+                    $('.sige-load').show();
+                    $http({
+                        method: 'POST',
+                        url: 'GrabarExcel_importarLds',
+                        params: {
+                            fechaRecepcion: $scope.obj_paramsForms.fechaRecepcion,
+                            fechaInicio: $scope.obj_paramsForms.fechaInicio,
+                            fechaTermino: $scope.obj_paramsForms.fechaTermino,
+                            tipoReparto: $scope.tipoReparto,
+                            anio: $scope.obj_paramsForms.anio,
+                            mes: $scope.obj_paramsForms.mes
+                        },
+                        headers: {
+                            'Content-Type': undefined
+                        }
+                    }).success(function (res) {
+
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            btn_Guardar.disabled = true;
+                            new PNotify({
+                                title: ' ',
+                                text: 'Se guardo la informacion correctamente..',
+                                type: 'success'
+                            });
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+
+                    }).error(function (error) {
+                        $('.sige-load').hide();
+                    });
+
+
+                }).on('pnotify.cancel', function () {
+                    $('.sige-load').hide();
+                });
+
+            }
+
+        });
+    </script>
+}
+
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+
+    <div ng-app="MyApp" ng-controller="MyController">
+        <div class="panel panel-oscuro ">
+            <div class="panel-heading">
+                <h6><i class="fa fa-table fa-lg"></i> IMPORTAR ARCHIVOS </h6>
+            </div>
+            <div class="panel-body">
+ 
+                <div class="row">
+                    <div class="col-sm-8 col-md-8">
+                        <input type="file" class="filestyle" style="height: 38px !important;" file-model="myFile" data-placeholder="Ningun Archivo Seleccionado" data-buttonname="btn-primary" data-size="sm" data-buttonbefore="true" data-buttontext="  Seleccionar Archivo..">
+                    </div>
+
+                    <div class="col-sm-4 col-md-4">
+                        <button button id="btn_ver" class="btn btn-primary btn-sm" ng-click="subirArchivo()"><span class="glyphicon glyphicon-search"></span> Leer </button>
+                        <button id="btn_nueva" type="button" class="btn btn-success " onclick="window.location.reload(true)"><span class="glyphicon glyphicon-plus"></span> Nuevo</button>
+                    </div>
+                </div>
+
+                <br />
+                <div class="row">
+                    <div class="col-lg-12">
+                        <fieldset class="fieldset-border">
+                            <legend>Leyenda </legend>
+                            <span class="label label-primary">La hoja de Excel tiene que tener por nombre "Importar".</span>
+                            <span class="label label-primary">El archivo a subir debe tener todos los bordes definidos.</span>
+                        </fieldset>
+                    </div>
+                </div>
+                <br />
+ 
+                <ul class="list-group">
+                    <li class="list-group-item" style="font-weight: bold; background-color: cornsilk; border-bottom: 1px solid green; text-align:left">
+                        <fieldset class="fieldset-border">
+                            <legend>Datos Generales </legend>
+
+                            <div class="row">
+                                <div class="col-sm-12 col-md-6">
+                                    <div class="row">
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Año  </label>
+                                            <br />
+                                            <input class="form-control" ng-model="obj_paramsForms.anio" readonly style="width: 100px; text-align: center" type="text">
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Cantidad  </label>
+                                            <br />
+                                            <input class="form-control" ng-model="obj_paramsForms.cantidad" readonly style="width: 140px ; text-align: right" type="text">
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Fecha Recepcion  </label>
+                                            <br />
+                                            <input class="form-control julio" ng-model="obj_paramsForms.fechaRecepcion" id="idFechaRecepcion" style="width: 140px" placeholder="dia/mes/año" type="text" value="@DateTime.Now.ToString("dd/MM/yyyy")" />
+                                        </div>
+                                    </div>
+
+                                    <div class="row m-b-2">
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Mes  </label>
+                                            <br />
+                                            <input class="form-control" ng-model="obj_paramsForms.mes" readonly style="width: 100px ;text-align: center" type="text">
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Cantidad Ordinarios  </label>
+                                            <br />
+                                            <input class="form-control" ng-model="obj_paramsForms.cantidadOrdinaria" readonly style="width: 140px; text-align: right" type="text">
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Fecha Inicio  </label>
+                                            <br />
+                                            <input class="form-control julio" ng-model="obj_paramsForms.fechaInicio" id="idFechaInicio" style="width: 140px" placeholder="dia/mes/año" type="text" value="@DateTime.Now.ToString("dd/MM/yyyy")" />
+                                        </div>
+                                    </div>
+
+                                    <div class="row mt-2">
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Cargo / Sector  </label>
+                                            <br />
+                                            <input class="form-control" ng-model="obj_paramsForms.cargo" readonly style="width: 100px; text-align: center" type="text">
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Cantidad Reclamos  </label>
+                                            <br />
+                                            <input class="form-control" ng-model="obj_paramsForms.cantidadReclamos" readonly style="width: 140px; text-align: right" type="text">
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <label class="control-label"> Fecha Termino  </label>
+                                            <br />
+                                            <input class="form-control julio" ng-model="obj_paramsForms.fechaTermino" id="idFechaTermino" style="width: 140px" placeholder="dia/mes/año" type="text" value="@DateTime.Now.ToString("dd/MM/yyyy")" />
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+
+                        </fieldset>
+                    </li>
+                </ul>
+ 
+
+
+                <div class="form-group">
+                    <div class="col-sm-12 text-center">
+                        <button id="btn_guardar" disabled="disabled" role="button" style="margin-left: 2px" class="btn btn-primary" ng-click="Guardar_informacion();"><i class="fa fa-save fa-lg"></i> Guardar</button>               
+                    </div>
+                </div>
+            </div>
+        </div>
+
+ 
+
+
+    </div>
+</body>
+</html>
+
+
+
+
+

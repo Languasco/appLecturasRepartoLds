@@ -1,0 +1,647 @@
+﻿
+
+@using DSIGE
+@using DSIGE.Modelo
+@using DSIGE.Negocio
+
+@{
+    ViewBag.Title = ".:: Consulta de Reparto  ::.";
+    Layout = "~/Views/Shared/_LayoutPrincipal.cshtml";
+}
+
+@section instances{
+
+    @Styles.Render("~/Content/dataTables-bootstrap/css/dataTables.bootstrap.min.css")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/jquery.dataTables.min.js")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/dataTables.bootstrap.min.js")
+
+    @Styles.Render("~/Content/bootstrap-datepicker/css/bootstrap-datepicker.min.css")
+    @Scripts.Render("~/Content/bootstrap-datepicker/js/bootstrap-datepicker.min.js")
+    @Scripts.Render("~/Content/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js")
+
+    @Scripts.Render("~/Content/bootstrap/js/bootstrap-filestyle.min.js")
+    @Scripts.Render("~/Scripts/jquery.fileDownload.js")
+    @Scripts.Render("~/Content/angular/angular.js")
+
+    <script src="~/Content/jQueryRotate/jQueryRotate.js"></script>
+
+}
+
+@section styles{
+    <style type="text/css">
+        .nav-tabs {
+            border-bottom: 0;
+        }
+
+        #_archivo.btn-info {
+            background-image: none;
+            color: inherit;
+            background-color: inherit !important;
+        }
+
+        .datepicker {
+            width: 200px;
+        }
+
+        body {
+            font-size: 10.5px;
+            font-family: tahoma;
+        }
+
+        .label-primary {
+            background-color: #337ab7;
+            font-size: 11px;
+        }
+
+        .label-danger {
+            background-color: red;
+            font-size: 11px;
+        }
+
+        .resaltado {
+            color: red;
+            text-decoration: underline;
+        }
+
+        .julio .table, th {
+            background-color: #333 !important;
+            color: white !important;
+        }
+
+
+        .menuBoton, .ul .li {
+            list-style-type: none;
+            padding: 10px;
+            /*display: inline-table;*/
+            width: 200px !important;
+        }
+
+        .ui-pnotify-text {
+            display: block;
+            font-size: 13px !important;
+            font-weight: bold
+        }
+
+        #Principal {
+            width: 700px;
+            height: 500px;
+        }
+
+        .modal {
+            z-index: 2000 !important;
+        }
+
+        span.label.label-info {
+            font-size: 12px !important;
+        }
+        span.label.label-success {
+            font-size: 12px !important;
+        }
+        
+
+        .tableFixHeadModal {
+            max-height: 700px;
+        }
+
+        .tableFixHeadModal {
+            overflow-y: auto;
+            max-height: 350px;
+        }
+
+        .tableFixHeadModal thead th {
+            position: sticky !important;
+            top: 0;
+        }
+
+        .tableFixHeadModal .table tbody tr:hover td, .table tbody tr:hover th, .table tbody tr:hover th a {
+            background-color: #ddd !important;
+            color: black !important;
+        }
+
+        .img-thumbnail {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .list-group {
+            margin-bottom: 0px !important;
+        }
+
+        .list-group-item {
+            padding: 9px 10px !important;
+            border-left: 1px solid #2196f3 !important;
+        }
+
+ 
+
+    </style>
+}
+
+@section scripts{
+
+    <script type="text/javascript">
+
+
+        function filterFloat(evt, input) {
+            var key = window.Event ? evt.which : evt.keyCode;
+
+
+            var chark = String.fromCharCode(key);
+            var tempValue = input.value + chark;
+            if (key >= 48 && key <= 58) {
+                if (filter(tempValue) === false) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                if (key == 8 || key == 13 || key == 0) {
+                    return true;
+                } else if (key == 46) {
+                    if (filter(tempValue) === false) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
+        function filter(__val__) {
+            var preg = /^([0-9]+\:?[0-9]{0,2})$/;
+            if (preg.test(__val__) === true) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+
+    </script>
+
+    <script type="text/javascript">
+
+        $(function () {
+            setTimeout(function () {
+                $(".select2").select2();
+            }, 0);
+        });
+
+        var app = angular.module('MyApp', []).directive('onFinishRender', function ($timeout) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attr) {
+                    if (scope.$last === true) {
+                        $timeout(function () {
+                            scope.$emit('ngRepeatFinished');
+                        });
+                    }
+                }
+            }
+        }).directive('fileModel', ['$parse', function ($parse) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attrs) {
+                    var model = $parse(attrs.fileModel);
+                    var modelSetter = model.assign;
+
+                    element.bind('change', function () {
+                        scope.$apply(function () {
+                            modelSetter(scope, element[0].files[0]);
+                        });
+                    });
+                }
+            };
+        }]);
+
+        app.service('fileUpload', ['$http', function ($http) {
+            this.uploadFileToUrl = function (idlocal, file, uploadUrl) {
+
+                var fd = new FormData();
+                fd.append('file', file);
+                fd.append('idlocal', idlocal);
+                $http.post(uploadUrl, fd, {
+
+                    transformRequest: angular.identity,
+                    headers: { 'Content-Type': undefined }
+                })
+                    .success(function (data) {
+
+                    })
+                    .error(function () {
+
+                    });
+
+            }
+        }]);
+
+        app.controller('MyController', function ($scope, $timeout, $http, fileUpload) {
+             
+            $scope.obj_paramsFormFiltro = {
+                suministro: '',
+            }
+
+            $scope.inicializarVariables = function () {
+                $scope.obj_paramsFormFiltro = {
+                    suministro: '',
+                }
+            }
+              
+            $scope.repartosCab = [];
+            $scope.mostrandoInformacion_consultaSuministroCab = function () {
+
+                if ($scope.obj_paramsFormFiltro.suministro == '' || $scope.obj_paramsFormFiltro.suministro == null) {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor ingrese el Numero de Suministro.',
+                        type: 'error'
+                    });
+                    return 
+                }
+ 
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getReporteConsultaSuministroCab',
+                    data: {
+                        suministro: String($scope.obj_paramsFormFiltro.suministro).trim()
+                    },
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (res) {
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            $scope.repartosCab = res.data;
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                    .error(function () {
+                        $('.sige-load').hide();
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+
+            $scope.tituloModal = '';
+            $scope.esOperario = false;
+
+            $scope.doSearch = function () {
+
+                let tableReg = null;
+                let searchText = null;
+
+                tableReg = document.getElementById('tblLista');
+                searchText = document.getElementById('inputSearch_user').value.toLowerCase();
+
+
+
+                for (var i = 1; i < tableReg.rows.length; i++) {
+                    var cellsOfRow = tableReg.rows[i].getElementsByTagName('td');
+                    var found = false;
+                    for (var j = 0; j < cellsOfRow.length && !found; j++) {
+                        var compareWith = cellsOfRow[j].innerHTML.toLowerCase();
+                        if (searchText.length == 0 || (compareWith.indexOf(searchText) > -1)) {
+                            found = true;
+                        }
+                    }
+                    if (found) {
+                        tableReg.rows[i].style.display = '';
+                    } else {
+                        tableReg.rows[i].style.display = 'none';
+                    }
+                }
+            }
+             
+            //------ gogoole maps ----
+ 
+            function RemoveMarker(map) {
+                for (var i = 0; i < $scope.markers.length; i++) {
+                    $scope.markers[i].setMap(map);
+                }
+            }
+
+            //function InicializarMapa() {
+
+            //    infoWindow = new google.maps.InfoWindow();
+
+            //    $scope.map = new google.maps.Map(document.getElementById('map'), {
+            //        zoom: 12,
+            //        center: { lat: -12.046374, lng: -77.0427934 },
+            //        mapTypeControl: true,
+            //        mapTypeControlOptions: {
+            //            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            //            position: google.maps.ControlPosition.TOP_CENTER
+            //        },
+            //        zoomControl: true,
+            //        zoomControlOptions: {
+            //            position: google.maps.ControlPosition.LEFT_CENTER
+            //        },
+            //        scaleControl: true,
+            //        streetViewControl: true,
+            //        streetViewControlOptions: {
+            //            position: google.maps.ControlPosition.LEFT_TOP
+            //        }
+            //    });
+            //};
+
+
+            var map = null;
+            var myMarker;
+            var myLatlng;
+
+            function initializeGMap(lat, lng) {
+
+                myLatlng = new google.maps.LatLng(lat, lng);
+
+                var myOptions = {
+                    zoom: 12,
+                    zoomControl: true,
+                    center: myLatlng,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+
+                map = new google.maps.Map(document.getElementById("map"), myOptions);
+
+                myMarker = new google.maps.Marker({
+                    position: myLatlng
+                });
+                myMarker.setMap(map);
+            }
+
+
+
+            $scope.limpiarMapa = function () {
+                RemoveMarker(null);
+                $scope.markers = [];
+            }
+
+            $scope.openInfoWindow = function (e, selectedMarker) {
+                e.preventDefault();
+                google.maps.event.trigger(selectedMarker, 'click');
+            }
+
+            $scope.abrilModal_mapa = function (latitud, longitud ) {
+
+                if (latitud != null || latitud != '' || latitud != '0' || latitud != '0.0') {
+                    
+                    initializeGMap(latitud, longitud );
+                    setTimeout(function () {
+                        $('#modal_mapa').modal({ show: 'true' });
+                        $("#map").css("width", "100%");
+                    }, 0);
+
+                } else {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'La latitud no es correcta, no se puede mostrar el mapa.',
+                        type: 'error'
+                    });
+                } 
+            }
+
+            $scope.galeriaFotos = function (id_Reparto) {
+ 
+                posicionActual = 0;
+
+                $.ajax({
+                    async: true,
+                    beforeSend: function (xhr) { },
+                    url: '../Ubicacion_Operarios/get_fotosUbicacionOperariosReparto',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        idLectura: id_Reparto,
+                    },
+                    success: function (res) {
+
+                        $("div").remove("#x");
+                        var $DivCorre = $('#corre');
+
+                        if (res.ok) {
+                            listPhotos = [];
+                            $.each(res.data, function (i, v) {
+                                listPhotos.push({
+                                    id: i,
+                                    url: res.data[i].url
+                                })
+                            });
+                            $DivCorre.append('<div id="x" class="item active"><img id="imgRotate" src="' + listPhotos[0].url + '" alt="..." style="width: 600px; height: 600PX; text-align: center;" /></div>');
+
+                            setTimeout(function () {
+                                $('#fotos').modal();
+                            }, 0);
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    },
+                    error: function (xhr) {
+                        alert('Algo salió mal, por favor intente de nuevo.');
+                    }
+                });
+            }
+ 
+        });
+
+
+        var degrees = 0;
+        function rotateImg() {
+            degrees += 90;
+            console.log($('#imgRotate'));
+            $("#imgRotate").rotate(degrees);
+        }
+
+        var listPhotos = [];
+        var posicionActual = 0;
+
+        function previusPhoto() {
+            var photo1 = document.getElementById('imgRotate');
+
+            if (posicionActual <= 0) {
+                posicionActual = listPhotos.length - 1;
+            } else {
+                posicionActual--;
+            }
+            photo1.src = listPhotos[posicionActual].url;
+        }
+
+        function nextPhoto() {
+            var photo1 = document.getElementById('imgRotate');
+
+            if (posicionActual >= listPhotos.length - 1) {
+                posicionActual = 0;
+            } else {
+                posicionActual++;
+            }
+            if (listPhotos.length > 1) {
+                photo1.src = listPhotos[posicionActual].url;
+            }
+        }
+
+    </script>
+}
+
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+
+    <div ng-app="MyApp" ng-controller="MyController" ng-init="inicializarVariables()">
+        <div class="panel panel-oscuro ">
+            <div class="panel-heading">
+                <h6><i class="fa fa-table fa-lg"></i> CONSULTA DE SUMINISTROS </h6>
+            </div>
+            <div class="panel-body">
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-4 col-md-2">
+                        <label for="idAnio" class="control-label"> Suministro</label>
+                        <br />
+                        <input type="text"  placeholder="Ingrese Suministro . . "  ng-model="obj_paramsFormFiltro.suministro" class="form-control btn-block" autocomplete="off">
+                    </div>
+                    <div class="col-xs-6  col-sm-4 col-md-2">
+                        <br />
+                        <div class="text-center ">
+                            <button button id="btn_buscar" class="btn btn-block btn-primary btn-sm" ng-click="mostrandoInformacion_consultaSuministroCab()"><span class="glyphicon glyphicon-search"></span> Buscar </button>
+                        </div>
+                    </div>
+                </div>
+                <br />
+
+                <div class="row" style=" margin-top: -10px; margin-bottom: 5px;">
+                    <div class="col-sm-3">
+
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-addon">Buscar</span>
+                            <input id="inputSearch_user" type="text" ng-keyup="doSearch()" placeholder="Busqueda Usuarios . . " style="width:95%" class="form-control btn-block inputSearch" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+
+                    </div>
+                </div>
+
+                <div class="tableFixHeadModal">
+                    <table id="tblLista" class="table  table-bordered  ">
+                        <thead>
+                            <tr>
+                                <th>Tipo Servicio</th>
+                                <th>Periodo</th>
+                                <th>Suministro</th>
+                                <th>Ruta</th>
+                                <th>Sucursal</th>
+                                <th>Foto</th>
+
+                                <th>Ubicacion</th>
+                                <th>Inicio Reparto</th>
+                                <th>Fin Reparto</th>
+                                <th>Fecha Maxima Reparto</th>
+                                <th>Fecha Recepcion</th>
+ 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in repartosCab">
+                                <td>{{item.tipoServicio}}</td>
+                                <td>{{item.periodo}}</td>
+                                <td>{{item.suministro}}</td>
+                                <td>{{item.ruta}}</td>
+                                <td>{{item.sucursal}}</td>
+                                <td class="text-center">
+                                      <img src="../Content/Imagen/foto.png" title="Ver Foto" style="cursor:pointer " ng-click="galeriaFotos(item.id_Reparto);">
+                                </td>
+
+                                <td class="text-center">
+                                    <img src="../Content/Imagen/mapa.png" title="Ver Mapa" style="cursor:pointer " ng-click="abrilModal_mapa(item.latitud, item.longitud);">
+                                </td>
+                                <td>{{item.inicioReparto}}</td>
+                                <td>{{item.finReparto}}</td>
+                                <td>{{item.fechaMaxReparto}}</td>
+                                <td>{{item.fechaRecepcion}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+
+   
+        <div class="modal fade" id="modal_mapa" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Ubicación del Suministro</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12 modal_body_map">
+                                <div class="location-map" id="location-map">
+                                    <div style="width: 600px; height: 400px;" id="map"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="fotos" class="modal fade bd-example-modal-lg " tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" style=" width: 600px;">
+                <div class="panel panel-oscuro">
+                    <div class="panel-heading">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <a onclick="rotateImg();" class="pull-right rotate" style="    margin-top: -10px; font-size: 12px; padding: 3px 4px;  color: white;  margin-right: 20px;cursor:pointer"><i class="fa fa-repeat" style="Color:#337ab7; font-size: 30px" aria-hidden="true"></i>Girar</a>
+                        <h6 class="modal-title" style=" font-size: 11px;"><i class="fa fa-cogs fa-lg"></i> DETALLE DE FOTOS</h6>
+                    </div>
+                    <div class="panel-body">
+                        <fieldset>
+                            <legend></legend>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+                                        <div class="carousel-inner" id="corre">
+                                        </div>
+
+                                        <a class="left carousel-control" href="#carousel-example-generic" onclick="previusPhoto()" role="button" data-slide="prev" style="background-color:black;width: 5px;">
+                                            <span class="glyphicon glyphicon-chevron-left"></span>
+                                        </a>
+                                        <a class="right carousel-control" href="#carousel-example-generic" onclick="nextPhoto()" role="button" data-slide="next" style="background-color:black; width: 5px;">
+                                            <span class="glyphicon glyphicon-chevron-right"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="panel-footer">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Mantenimiento" style="float: right;">
+                                        <button role="button" id="btnCancelar" class="btn btn-default" style="background-color: #fff;" data-dismiss="modal"><i class="fa fa-close fa-lg"></i> Atras</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,1187 @@
+﻿
+@using DSIGE
+@using DSIGE.Modelo
+@using DSIGE.Negocio
+
+@{
+    ViewBag.Title = ".:: Asignar Reparto  ::.";
+    Layout = "~/Views/Shared/_LayoutPrincipal.cshtml";
+}
+
+@section instances{
+
+    @Styles.Render("~/Content/dataTables-bootstrap/css/dataTables.bootstrap.min.css")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/jquery.dataTables.min.js")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/dataTables.bootstrap.min.js")
+
+    @Styles.Render("~/Content/bootstrap-datepicker/css/bootstrap-datepicker.min.css")
+    @Scripts.Render("~/Content/bootstrap-datepicker/js/bootstrap-datepicker.min.js")
+    @Scripts.Render("~/Content/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js")
+
+    @Scripts.Render("~/Content/bootstrap/js/bootstrap-filestyle.min.js")
+    @Scripts.Render("~/Scripts/jquery.fileDownload.js")
+    @Scripts.Render("~/Content/angular/angular.js")
+
+}
+
+@section styles{
+    <style type="text/css">
+        .nav-tabs {
+            border-bottom: 0;
+        }
+
+        #_archivo.btn-info {
+            background-image: none;
+            color: inherit;
+            background-color: inherit !important;
+        }
+/*
+        .modal-dialog {
+            width: 300px;
+        }*/
+
+        .datepicker {
+            width: 200px;
+        }
+
+
+        body {
+            font-size: 10.5px;
+            font-family: tahoma;
+        }
+
+        .label-primary {
+            background-color: #337ab7;
+            font-size: 11px;
+        }
+
+        .label-danger {
+            background-color: red;
+            font-size: 11px;
+        }
+
+        .resaltado {
+            color: red;
+            text-decoration: underline;
+        }
+
+        .julio .table, th {
+            background-color: #333 !important;
+            color: white !important;
+        }
+
+
+        .menuBoton, .ul .li {
+            list-style-type: none;
+            padding: 10px;
+            /*display: inline-table;*/
+            width: 200px !important;
+        }
+
+        .ui-pnotify-text {
+            display: block;
+            font-size: 13px !important;
+            font-weight: bold
+        }
+
+        #Principal {
+            width: 700px;
+            height: 500px;
+        }
+        .modal {
+            z-index: 2000 !important;
+        }
+
+    </style>
+}
+
+@section scripts{
+
+    <script type="text/javascript">
+        function filterFloat(evt, input) {
+            var key = window.Event ? evt.which : evt.keyCode;
+
+
+            var chark = String.fromCharCode(key);
+            var tempValue = input.value + chark;
+            if (key >= 48 && key <= 58) {
+                if (filter(tempValue) === false) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                if (key == 8 || key == 13 || key == 0) {
+                    return true;
+                } else if (key == 46) {
+                    if (filter(tempValue) === false) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
+        function filter(__val__) {
+            var preg = /^([0-9]+\:?[0-9]{0,2})$/;
+            if (preg.test(__val__) === true) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+
+    </script>
+
+    <script type="text/javascript">
+
+        $(function () {
+            $('#idFechaRecepcion').datepicker({
+                format: 'dd/mm/yyyy',
+                language: 'es',
+                autoclose: true
+            });
+            $('#idFechaInicio').datepicker({
+                format: 'dd/mm/yyyy',
+                language: 'es',
+                autoclose: true
+            });
+            $('#idFechaTermino').datepicker({
+                format: 'dd/mm/yyyy',
+                language: 'es',
+                autoclose: true
+            });
+            setTimeout(function () {
+                $(".select2").select2();
+            }, 0);
+        });
+
+        var app = angular.module('MyApp', []).directive('onFinishRender', function ($timeout) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attr) {
+                    if (scope.$last === true) {
+                        $timeout(function () {
+                            scope.$emit('ngRepeatFinished');
+                        });
+                    }
+                }
+            }
+        }).directive('fileModel', ['$parse', function ($parse) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attrs) {
+                    var model = $parse(attrs.fileModel);
+                    var modelSetter = model.assign;
+
+                    element.bind('change', function () {
+                        scope.$apply(function () {
+                            modelSetter(scope, element[0].files[0]);
+                        });
+                    });
+                }
+            };
+        }]);
+
+        app.service('fileUpload', ['$http', function ($http) {
+            this.uploadFileToUrl = function (idlocal, file, uploadUrl) {
+
+                var fd = new FormData();
+                fd.append('file', file);
+                fd.append('idlocal', idlocal);
+                $http.post(uploadUrl, fd, {
+
+                    transformRequest: angular.identity,
+                    headers: { 'Content-Type': undefined }
+                })
+                .success(function (data) {
+
+                })
+                .error(function () {
+
+                });
+
+            }
+        }]);
+
+        app.controller('MyController', function ($scope, $timeout, $http, fileUpload) {
+
+            $scope.myFile;
+
+            function MostrandoFechaSistemaActual() {
+                var fecha = new Date();
+                var ano = fecha.getFullYear();
+                var dia = fecha.getDate();
+                var mes = fecha.getMonth();
+
+                if (dia < 10) {
+                    dia = '0' + dia;
+                }
+                if (mes <= 9) {
+                    mes = '0' + (mes + 1);
+                } else {
+                    mes = (mes + 1);
+                }
+                return dia + '/' + mes + '/' + ano
+            }
+
+            $scope.cant_archivosCargados = 0;
+
+            $scope.subirArchivo = function () {
+                let btn_Guardar = document.getElementById('btn_guardar');
+                let btn_ver = document.getElementById('btn_ver');
+
+                if ($scope.myFile == null) {
+                    new PNotify({
+                        title: ' ',
+                        text: 'Por favor seleccione un Archivo para cargarlo..',
+                        type: 'error'
+                    });
+                } else {
+
+ 
+
+                    $('.sige-load').show();
+                    var file = $scope.myFile;
+                    var uploadUrl = '@Url.Action("InsertaExcel_asignacion")';
+
+                    var fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('anio', $scope.obj_paramsFormFiltro.anio);
+                    fd.append('mes', $scope.obj_paramsFormFiltro.mes);
+                    fd.append('idCargo', $scope.obj_paramsFormFiltro.idCargo);
+                    fd.append('idEstado', $scope.obj_paramsFormFiltro.idEstado);
+
+                    $http.post(uploadUrl, fd,
+                    {
+                        transformRequest: angular.identity,
+                        headers: { 'Content-Type': undefined }
+                        }).success(function (res) {
+
+                        $('.sige-load').hide();
+
+                        if (res.ok) {
+
+                            if (res.data.length > 0) {
+
+                                btn_ver.disabled = true;
+                                btn_Guardar.disabled = false;
+                                $scope.cant_archivosCargados = res.data[0].cantidad;     
+                            }
+
+                        } else {
+                            $scope.cant_archivosCargados = 0;
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                        .error(function () {
+                            $scope.cant_archivosCargados = 0;
+                            $scope.nombreArchivoCargados = '';
+                            $scope.tipoReparto = 0;
+                        alert('Ocurrio un problema con la conexion, vuelva a intentar.')
+                        $('.sige-load').hide();
+                    });
+
+                }
+            };
+
+            $scope.Guardar_informacion = function () {
+
+                var cancel = document.getElementById('btn_cancelImportar');
+                var btn_Guardar = document.getElementById('btn_guardar');
+
+                if ($scope.cant_archivosCargados == 0) {
+                    new PNotify({
+                        title: ' ',
+                        text: 'No se cargo correctamente el archivo, intente nuevamente..',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                (new PNotify({
+                    title: 'Sistemas Confirmación ',
+                    text: 'Desea guardar la informacion ?',
+                    icon: 'glyphicon glyphicon-question-sign',
+                    hide: false,
+                    confirm: {
+                        confirm: true
+                    },
+                    buttons: {
+                        closer: false,
+                        sticker: false
+                    },
+                    history: {
+                        history: false
+                    }
+                })).get().on('pnotify.confirm', function () {
+ 
+                    $('.sige-load').show();
+                    $http({
+                        method: 'POST',
+                        url: '../AsignaOrdenTrabajo/GrabarExcel_importarAsignacion',
+                        params: {
+                            anio: $scope.obj_paramsFormFiltro.anio,
+                            mes: $scope.obj_paramsFormFiltro.mes,
+                            idCargo: $scope.obj_paramsFormFiltro.idCargo,
+                            idEstado: $scope.obj_paramsFormFiltro.idEstado
+                        },
+                        headers: {
+                            'Content-Type': undefined
+                        }
+                    }).success(function (res) {
+
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            btn_Guardar.disabled = true;
+                            cancel.click();
+                            new PNotify({
+                                title: ' ',
+                                text: 'Se guardo la informacion correctamente..',
+                                type: 'success'
+                            });
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+
+                    }).error(function (error) {
+                        $('.sige-load').hide();
+                    });
+
+
+                }).on('pnotify.cancel', function () {
+                    $('.sige-load').hide();
+                });
+
+            }
+
+
+            ///---- ASIGNACION Y REASIGNACION LDS
+
+ 
+            const mesesGeneral = () => {
+                return [{ mes: 1, valor: 'Enero' }, { mes: 2, valor: 'Febrero' }, { mes: 3, valor: 'Marzo' }, { mes: 4, valor: 'Abril' }, { mes: 5, valor: 'Mayo' }, { mes: 6, valor: 'Junio' },
+                { mes: 7, valor: 'Julio' }, { mes: 8, valor: 'Agosto' }, { mes: 9, valor: 'Setiembre' }, { mes: 10, valor: 'Octubre' }, { mes: 11, valor: 'Nombre' }, { mes: 12, valor: 'Diciembre' },
+                ]
+            }
+
+            const aniosGeneral = () => {
+                return [{ anio: 2020, valor: '2020' }, { anio: 2021, valor: '2021' }, { anio: 2022, valor: '2022' }, { anio: 2023, valor: '2023' }, { anio: 2024, valor: '2024' }, { anio: 2025, valor: '2025' },
+                    { anio: 2026, valor: '2026' }, { anio: 2027, valor: '2027' }, { anio: 2028, valor: '2028' }, { anio: 2029, valor: '2029' }, { anio: 2030, valor: '2030' }, { anio: 2031, valor: '2031' }
+                ]
+            }
+
+            $scope.aniosSistema = [];
+            $scope.mesesSistema = [];
+
+            $scope.aniosSistema = aniosGeneral();
+            $scope.mesesSistema = mesesGeneral();
+
+            const get_anio = () => {
+                const anio = new Date().getFullYear();
+                return String(anio);
+            }
+            const get_mes = () => {
+                const mes = new Date().getMonth() + 1;
+                return String(mes);
+            }
+
+            $scope.obj_paramsFormFiltro = {
+                anio: '',
+                mes: '',
+                idCargo: '0',
+                idEstado: '0',
+            } 
+ 
+            $scope.inicializarVariables = function () {
+                $scope.obj_paramsFormFiltro = {
+                    anio: get_anio(),
+                    mes: get_mes(),
+                    idCargo: '0',
+                    idEstado: '3'
+                }
+                setTimeout(function () {
+                    $('#idAnio').val(get_anio()).trigger('change');
+                    $('#idMes').val(get_mes()).trigger('change');
+                    $('#cboEstado').val('3').trigger('change');
+                }, 0);     
+            }
+
+            $scope.cargos = [];
+            $scope.listando_cargos = function () {
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getCargos',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (res) {
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            $scope.cargos = res.data;
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                    .error(function () {
+                        $('.sige-load').hide();
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+            $scope.listando_cargos();
+
+
+            $scope.estados = [];
+            $scope.listando_estados = function () {
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getEstados',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (res) {
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            $scope.estados = res.data;
+
+                            setTimeout(function () {
+                                $('#cboEstado').val('3').trigger('change');
+                            }, 0);
+
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                    .error(function () {
+                        $('.sige-load').hide();
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+            $scope.listando_estados();
+
+            $scope.operarios = [];
+            $scope.listando_operarios = function () {
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getOperarios',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                .success(function (res) {
+                    $('.sige-load').hide();
+                        if (res.ok) {
+                            $scope.operarios = res.data;
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }          
+                    })
+                .error(function () {
+                    $('.sige-load').hide();
+                    alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                });
+            };
+            $scope.listando_operarios();
+
+
+            $scope.supervisores = [];
+            $scope.listando_Supervisores = function () {
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getSupervisores',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (res) {
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            $scope.supervisores = res.data;
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                    .error(function () {
+                        $('.sige-load').hide();
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+            $scope.listando_Supervisores();
+
+
+
+            $scope.repartosCab = [];
+            $scope.mostrandoInformacion_repartosCab = function () {
+
+                if ($scope.obj_paramsFormFiltro.anio == 0 || $scope.obj_paramsFormFiltro.anio == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Seleccione el Año.',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.mes == 0 || $scope.obj_paramsFormFiltro.mes == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Mes',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.idCargo == 0 || $scope.obj_paramsFormFiltro.idCargo == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Cargo',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.idEstado == 0 || $scope.obj_paramsFormFiltro.idEstado == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Estado',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getRepartos_asignarReasignar',
+                    data: {
+                        anio: $scope.obj_paramsFormFiltro.anio,
+                        mes: $scope.obj_paramsFormFiltro.mes,
+                        idCargo: $scope.obj_paramsFormFiltro.idCargo,
+                        idEstado: $scope.obj_paramsFormFiltro.idEstado,
+                    },
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (res) {
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            $scope.repartosCab = res.data;
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                    .error(function () {
+                        $('.sige-load').hide();
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+
+
+            // METODO PARA CHEKED ALL
+            $scope.checkedAll = false;
+            $scope.checkedAll_OrdenTrabajo = function (checked) {
+                if (checked) {
+                    angular.forEach($scope.repartosCab, function (child) {
+                        child.checkeado = true;
+                    })
+                } else {
+                    angular.forEach($scope.repartosCab, function (child) {
+                        child.checkeado = false;
+                    })
+                }
+            }
+
+            function MarcoCheck() {
+                var flag_marco = false;
+                for (var i = 0; i < $scope.repartosCab.length; i++) {
+                    if ($scope.repartosCab[i].checkeado == true) {
+                        flag_marco = true;
+                        break;
+                    }
+                }
+                return flag_marco;
+            }
+
+            function ListaMarcoCheck() {
+                $scope.ListaData = [];
+                for (var i = 0; i < $scope.repartosCab.length; i++) {
+                    if ($scope.repartosCab[i].checkeado == true) {
+                        $scope.ListaData.push({
+                            'sucursal': $scope.repartosCab[i].sucursal,
+                            'zona': $scope.repartosCab[i].zona,
+                        });
+                    }
+                }
+                return $scope.ListaData;
+            }
+
+            $scope.tituloModal = '';
+            $scope.esOperario = false;
+
+            $scope.abrirModal_asignarOperario = function (opcion) {
+
+                let flag_marco = false;
+                flag_marco = MarcoCheck();
+
+                if (flag_marco == false) {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione al menos un registro de la Tabla.',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                $scope.tituloModal = opcion == 1 ? 'ASIGNACION DE OPERARIO' : 'ASIGNACION DE SUPERVISOR'
+                $scope.obj_paramsFormFiltro.idOperario = '0';
+                $scope.obj_paramsFormFiltro.idSupervisor = '0';
+
+                $scope.esOperario = opcion == 1 ? true : false;
+                $scope.obj_paramsFormFiltro.opcionTecnico = (opcion == 1) ? 'O' : 'S';
+
+                setTimeout(function () {
+                    $('#modal_EnvioMovil').modal({ show: 'false' }); 
+                    $('#idOperario').val('0').trigger('change');
+                    $('#idSupervisor').val('0').trigger('change');                    
+                }, 0);
+            }
+
+            $scope.GenerarAsignacionReasignacion = function () {
+
+                (new PNotify({
+                    title: 'Sistemas Confirmación ',
+                    text: 'Esta seguro de Asignar ?',
+                    icon: 'glyphicon glyphicon-question-sign',
+                    hide: false,
+                    confirm: {
+                        confirm: true
+                    },
+                    buttons: {
+                        closer: false,
+                        sticker: false
+                    },
+                    history: {
+                        history: false
+                    }
+                })).get().on('pnotify.confirm', function () {
+
+
+                    if ($scope.obj_paramsFormFiltro.anio == 0 || $scope.obj_paramsFormFiltro.anio == '0') {
+                        new PNotify({
+                            title: 'Sistemas',
+                            text: 'Seleccione el Año.',
+                            type: 'error'
+                        });
+                        return;
+                    }
+
+                    if ($scope.obj_paramsFormFiltro.mes == 0 || $scope.obj_paramsFormFiltro.mes == '0') {
+                        new PNotify({
+                            title: 'Sistemas',
+                            text: 'Por favor seleccione el Mes',
+                            type: 'error'
+                        });
+                        return;
+                    }
+
+                    if ($scope.obj_paramsFormFiltro.idCargo == 0 || $scope.obj_paramsFormFiltro.idCargo == '0') {
+                        new PNotify({
+                            title: 'Sistemas',
+                            text: 'Por favor seleccione el Cargo',
+                            type: 'error'
+                        });
+                        return;
+                    }
+
+                    if ($scope.obj_paramsFormFiltro.idEstado == 0 || $scope.obj_paramsFormFiltro.idEstado == '0') {
+                        new PNotify({
+                            title: 'Sistemas',
+                            text: 'Por favor seleccione el Estado',
+                            type: 'error'
+                        });
+                        return;
+                    }
+                     
+                    $scope.List_codigo = [];
+
+                    $('.sige-load').show();
+                    $scope.List_codigo = ListaMarcoCheck();
+
+                    var variables = {
+                        method: 'POST',
+                        url: '../AsignaOrdenTrabajo/GenerarAsignacionReasignacion',
+                        data: {
+                            ListaOrdenes: $scope.List_codigo,
+                            anio: $scope.obj_paramsFormFiltro.anio,
+                            mes: $scope.obj_paramsFormFiltro.mes,
+                            idCargo: $scope.obj_paramsFormFiltro.idCargo,
+                            idEstado: $scope.obj_paramsFormFiltro.idEstado,
+                            tipo: $scope.obj_paramsFormFiltro.opcionTecnico,
+                            idTecnico: ($scope.obj_paramsFormFiltro.opcionTecnico == 'O') ? $scope.obj_paramsFormFiltro.idOperario : $scope.obj_paramsFormFiltro.idSupervisor
+                        },
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        }
+                    }
+
+                    $http(variables)
+                        .success(function (res) {
+                            $('.sige-load').hide();
+                            if (res.ok == true) {
+                                new PNotify({
+                                    title: 'Sistemas',
+                                    text: 'Proceso Realizado Correctamente.',
+                                    type: 'success'
+                                });             
+                                $scope.mostrandoInformacion_repartosCab();
+                                $('#modal_EnvioMovil').modal('toggle');
+
+                            } else {
+                                alert(JSON.stringify(res.data))
+                            }
+                        })
+                        .error(function () {
+                            alert('Ocurrio un problema con la conexion, vuelva a intentar.')
+                        });
+
+
+                }).on('pnotify.cancel', function () {
+
+                });
+
+            }
+
+            $scope.doSearch = function () {
+
+                let tableReg = null;
+                let searchText = null;
+ 
+                tableReg = document.getElementById('tblLista');
+                searchText = document.getElementById('inputSearch_user').value.toLowerCase();
+ 
+
+
+                for (var i = 1; i < tableReg.rows.length; i++) {
+                    var cellsOfRow = tableReg.rows[i].getElementsByTagName('td');
+                    var found = false;
+                    for (var j = 0; j < cellsOfRow.length && !found; j++) {
+                        var compareWith = cellsOfRow[j].innerHTML.toLowerCase();
+                        if (searchText.length == 0 || (compareWith.indexOf(searchText) > -1)) {
+                            found = true;
+                        }
+                    }
+                    if (found) {
+                        tableReg.rows[i].style.display = '';
+                    } else {
+                        tableReg.rows[i].style.display = 'none';
+                    }
+                }
+            }
+             
+            $scope.exportarAsignacion = function () {
+
+                if ($scope.obj_paramsFormFiltro.anio == 0 || $scope.obj_paramsFormFiltro.anio == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Seleccione el Año.',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.mes == 0 || $scope.obj_paramsFormFiltro.mes == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Mes',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.idCargo == 0 || $scope.obj_paramsFormFiltro.idCargo == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Cargo',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.idEstado == 0 || $scope.obj_paramsFormFiltro.idEstado == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Estado',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getExportar_Asignacion',
+                    data: {
+                        anio: $scope.obj_paramsFormFiltro.anio,
+                        mes: $scope.obj_paramsFormFiltro.mes,
+                        idCargo: $scope.obj_paramsFormFiltro.idCargo,
+                        idEstado: $scope.obj_paramsFormFiltro.idEstado,
+                    },
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (res) {
+                        $('.sige-load').hide();
+                        console.log(res);
+                        if (res.ok) {
+                            window.open(res.data, '_blank');
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                    .error(function () {
+                        $('.sige-load').hide();
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+
+            $scope.abrirModal_importacion = function () {
+
+                if ($scope.obj_paramsFormFiltro.anio == 0 || $scope.obj_paramsFormFiltro.anio == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Seleccione el Año.',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.mes == 0 || $scope.obj_paramsFormFiltro.mes == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Mes',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.idCargo == 0 || $scope.obj_paramsFormFiltro.idCargo == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Cargo',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.idEstado == 0 || $scope.obj_paramsFormFiltro.idEstado == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Estado',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                $scope.nuevaImportacion();
+                setTimeout(function () {
+                    $('#modal_importar').modal({ show: 'false' });
+                }, 0);
+
+            }
+
+            $scope.nuevaImportacion = function () {
+
+                $scope.myFile = null;
+                $scope.cant_archivosCargados = 0;
+
+                $(":file").filestyle('clear');
+                $('#btn_ver').attr('disabled', false);
+                $('#btn_guardar').attr('disabled', true);
+            }
+
+        });
+    </script>
+}
+
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+
+    <div ng-app="MyApp" ng-controller="MyController" ng-init="inicializarVariables()">
+        <div class="panel panel-oscuro ">
+            <div class="panel-heading">
+                <h6><i class="fa fa-table fa-lg"></i> ASIGNACION Y REASIGNACION DE ORDENES </h6>
+            </div>
+            <div class="panel-body">
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-3 col-md-2">
+                        <label for="idAnio" class="control-label">Año</label>
+                        <br />
+                        <select class=" select2" id="idAnio" style="width:98%" ng-model="obj_paramsFormFiltro.anio">
+                            <option value="0" selected="selected"> [-SELEC-]</option>
+                            <option ng-repeat="item in aniosSistema" value="{{item.anio}}"> {{item.valor}} </option>
+                        </select>
+                    </div>
+                    <div class="col-xs-6 col-sm-3 col-md-2">
+                        <label for="idMes" class="control-label">Mes</label>
+                        <br />
+                        <select class="select2" id="idMes" style="width:98%" ng-model="obj_paramsFormFiltro.mes">
+                            <option value="0" selected="selected"> [-SELEC-]</option>
+                            <option ng-repeat="item in mesesSistema" value="{{item.mes}}"> {{item.valor}} </option>
+                        </select>
+                    </div>
+
+                    <div class="col-xs-6 col-sm-3 col-md-2">
+                        <label for="idCargo" class="control-label">Cargo</label>
+                        <br />
+                        <select class=" select2" id="idCargo" style="width:98%" ng-model="obj_paramsFormFiltro.idCargo">
+                            <option value="0" selected="selected"> [-SELEC-]</option>
+                            <option ng-repeat="item in cargos" value="{{item.id}}"> {{item.descripcion}} </option>
+                        </select>
+                    </div>
+                    <div class="col-xs-6 col-sm-3 col-md-2">
+                        <label for="cboEstado" class="control-label">Estado</label>
+                        <br />
+                        <select class=" select2" id="cboEstado" style="width:98%" ng-model="obj_paramsFormFiltro.idEstado">
+                            <option value="0" selected="selected"> [--SELECCIONE--]</option>
+                            <option ng-repeat="item in estados" value="{{item.id}}"> {{item.descripcion}} </option>
+                        </select>
+                    </div>
+
+                    <div class="col-xs-12  col-sm-12 col-md-4">
+                        <br />
+                        <div class="text-center ">
+                            <button button id="btn_buscar" class="btn btn-primary btn-sm" ng-click="mostrandoInformacion_repartosCab()"><span class="glyphicon glyphicon-search"></span> Actualizar </button>
+                            <button button id="btn_exportar" class="btn btn-success btn-sm" ng-click="exportarAsignacion()"><span class="glyphicon glyphicon-download"></span> Exportar </button>
+                            <button button id="btn_importar" class="btn btn-info btn-sm" ng-click="abrirModal_importacion()"><span class="glyphicon glyphicon-upload"></span> Importar </button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="row" style=" margin-top: -10px; margin-bottom: 5px;">
+                    <div class="col-sm-3">
+
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-addon">Buscar</span>
+                            <input id="inputSearch_user" type="text" ng-keyup="doSearch()" placeholder="Busqueda Usuarios . . " style="width:95%" class="form-control btn-block inputSearch" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+
+                    </div>
+                </div>
+
+                <div class="tableFixHead">
+                    <table id="tblLista" class="table  table-bordered  ">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="checkbox clip-check check-danger checkbox-inline" style=" margin-bottom: -5px;">
+                                        <input type="checkbox" id="checkboxAll" value="1" ng-model="checkedAll" ng-click="checkedAll_OrdenTrabajo(checkedAll,1)">
+                                        <label for="checkboxAll">
+                                        </label>
+                                    </div>
+                                </th>
+
+                                <th>Sucursal</th>
+                                <th>Zona</th>
+                                <th>Total Zona</th>
+                                <th>Total Ordinario</th>
+                                <th>Total Reclamo</th>
+                                <th>Operario</th>
+                                <th>Supervidor</th>
+                                <th>Inicio Reparto</th>
+                                <th>Fin Reparto </th>
+                                <th>F. Recepcion</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in repartosCab">
+                                <td>
+                                    <div class="checkbox clip-check check-primary checkbox-inline" style="margin-bottom: -13px !important;   margin-top: -19px;">
+                                        <input type="checkbox" id="checkbox{{$index}}" value="true" ng-disabled={{item.disabled}} ng-model="item.checkeado">
+                                        <label for="checkbox{{$index}}">
+                                        </label>
+                                    </div>
+                                </td>
+                                <td>{{item.sucursal}}</td>
+                                <td>{{item.zona}}</td>
+                                <td style="text-align:right">{{item.totalZona}}</td>
+                                <td style="text-align:right">{{item.totalOrdinario}}</td>
+                                <td style="text-align:right">{{item.totalReclamo}}</td>
+                                <td>{{item.operario}}</td>
+                                <td>{{item.supervisor}}</td>
+                                <td>{{item.inicioReparto}}</td>
+                                <td>{{item.finReparto}}</td>
+                                <td>{{item.Frecepcion}}</td>
+                                <td>{{item.estado}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <br />
+
+                <div class="text-center ">
+                    <button button class="btn btn-primary" ng-click="abrirModal_asignarOperario(1)"><span class="glyphicon glyphicon-floppy-save "></span> Asignar Operario </button>
+                    <button button class="btn btn-danger" ng-click="abrirModal_asignarOperario(2)"><span class="glyphicon glyphicon-floppy-save "></span> Asignar Supervisor </button>
+                </div>
+
+
+
+                <div id="modal_EnvioMovil" class="modal fade" role="dialog" tabindex="-1" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog">
+                        <div class="panel panel-oscuro">
+                            <div class="panel-heading">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h6 class="modal-title"><i class="fa fa-calendar fa-lg"></i> {{tituloModal}}  </h6>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-horizontal">
+                                    <div class="row" ng-show="esOperario">
+                                        <div class="col-md-12">
+                                            <div class="form-group form-group-sm">
+                                                <label for="_usuario" class="col-sm-3 control-label">OPERARIO</label>
+                                                <div class="col-sm-9">
+                                                    <select class=" select2" id="idOperario" style="width:98%" ng-model="obj_paramsFormFiltro.idOperario">
+                                                        <option value="0" selected="selected"> [-- SELECCIONE --]</option>
+                                                        <option ng-repeat="item in operarios" value="{{item.id}}"> {{item.descripcion}} </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row" ng-show="!esOperario">
+                                        <div class="col-md-12">
+                                            <div class="form-group form-group-sm">
+                                                <label for="_usuario" class="col-sm-3 control-label">SUPERVISOR</label>
+                                                <div class="col-sm-9">
+                                                    <select class=" select2" id="idSupervisor" style="width:98%" ng-model="obj_paramsFormFiltro.idSupervisor">
+                                                        <option value="0" selected="selected"> [-- SELECCIONE --]</option>
+                                                        <option ng-repeat="item in supervisores" value="{{item.id}}"> {{item.descripcion}} </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="panel-footer">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="btn-group btn-group-sm" role="group" aria-label="Mantenimiento" style="float: right;">
+
+                                            <button role="button" class="btn btn-primary" ng-click="GenerarAsignacionReasignacion()"><i class="fa fa-save fa-lg"></i> Enviar Movil </button>
+                                            <button id="btn_cancel" role="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-close fa-lg"></i> Cancelar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+                <div id="modal_importar" class="modal fade" role="dialog" tabindex="-1" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog">
+                        <div class="panel panel-oscuro">
+                            <div class="panel-heading">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h6 class="modal-title"><i class="fa fa-calendar fa-lg"></i> IMPORTAR REPARTO  </h6>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-horizontal">
+
+                                    <div class="row">
+                                        <div class="col-sm-8 col-md-8">
+                                            <input type="file" class="filestyle" style="height: 38px !important;" file-model="myFile" data-placeholder="Ningun Archivo Seleccionado" data-buttonname="btn-primary" data-size="sm" data-buttonbefore="true" data-buttontext="  Seleccionar Archivo..">
+                                        </div>
+
+                                        <div class="col-sm-4 col-md-4">
+                                            <button button id="btn_ver" class="btn btn-primary btn-sm" ng-click="subirArchivo()"><span class="glyphicon glyphicon-search"></span> Ver </button>
+                                            <button id="btn_nueva" type="button" class="btn btn-success btn-sm " ng-click="nuevaImportacion()"><span class="glyphicon glyphicon-plus"></span> Nuevo</button>
+                                        </div>
+                                    </div>
+
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <fieldset class="fieldset-border">
+                                                <legend>Leyenda </legend>
+                                                <span class="label label-primary">La hoja de Excel tiene que tener por nombre "Importar".</span>
+                                                <span class="label label-primary">El archivo a subir debe tener todos los bordes definidos.</span>
+                                            </fieldset>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <ul class="list-group">
+                                                <li class="list-group-item" style="font-weight: bold; background-color: cornsilk; border-bottom: 1px solid green; "> CANTIDAD ARCHIVOS CARGADOS <span class="badge"> {{cant_archivosCargados}}</span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-footer">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="btn-group btn-group-sm" role="group" aria-label="Mantenimiento" style="float: right;">
+                                            <button id="btn_guardar" disabled="disabled" role="button" style="margin-left: 2px" class="btn btn-primary" ng-click="Guardar_informacion();"><i class="fa fa-save fa-lg"></i> Guardar</button>
+                                            <button id="btn_cancelImportar" role="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-close fa-lg"></i> Cancelar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>       
+
+
+            </div>
+        </div>
+
+
+
+
+    </div>
+</body>
+</html>
+
+
+
+
+
