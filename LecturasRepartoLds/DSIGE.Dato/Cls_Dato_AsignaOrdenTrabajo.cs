@@ -7097,6 +7097,9 @@ namespace DSIGE.Dato
                     oWs.Cells[_fila, pos].Value = "TOTAL LIBRO"; pos += 1;
                     oWs.Cells[_fila, pos].Value = "ORDINARIOS"; pos += 1;
 
+                    oWs.Cells[_fila, pos].Value = "ORD. REP"; pos += 1;
+                    oWs.Cells[_fila, pos].Value = "ORD. % REP"; pos += 1;
+
                     oWs.Cells[_fila, pos].Value = "RECLAMOS"; pos += 1;
                     oWs.Cells[_fila, pos].Value = "REC. REP"; pos += 1;
                     oWs.Cells[_fila, pos].Value = "REC % REP"; pos += 1;
@@ -7118,6 +7121,9 @@ namespace DSIGE.Dato
                         oWs.Cells[_fila, pos].Value = item["operario"].ToString(); pos += 1;
                         oWs.Cells[_fila, pos].Value = item["totalLibro"].ToString(); pos += 1;
                         oWs.Cells[_fila, pos].Value = item["ordinario"].ToString(); pos += 1;
+
+                        oWs.Cells[_fila, pos].Value = item["ordinarioRep"].ToString(); pos += 1;
+                        oWs.Cells[_fila, pos].Value = item["ordinarioPorcRep"].ToString(); pos += 1;
 
                         oWs.Cells[_fila, pos].Value = item["reclamos"].ToString(); pos += 1;
                         oWs.Cells[_fila, pos].Value = item["recRep"].ToString(); pos += 1;
@@ -7201,7 +7207,7 @@ namespace DSIGE.Dato
                         cmd.Parameters.Add("@mes", SqlDbType.Int).Value = mes;
                         cmd.Parameters.Add("@idCargo", SqlDbType.Int).Value = idCargo;
                         cmd.Parameters.Add("@sucursal", SqlDbType.Int).Value = idSucursal;
-                        cmd.Parameters.Add("@zona", SqlDbType.Int).Value = idSucursal;
+                        cmd.Parameters.Add("@zona", SqlDbType.Int).Value = zona;
 
                         DataTable dt_detalle = new DataTable();
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))
@@ -7251,6 +7257,7 @@ namespace DSIGE.Dato
 
                                 Entidad.sucursal = dr["sucursal"].ToString();
                                 Entidad.tieneFoto = dr["tieneFoto"].ToString();
+                                Entidad.tieneMapa = dr["tieneMapa"].ToString();
                                 Entidad.inicioReparto = dr["inicioReparto"].ToString();
                                 Entidad.finReparto = dr["finReparto"].ToString();
 
@@ -7259,6 +7266,10 @@ namespace DSIGE.Dato
                                 Entidad.estado = dr["estado"].ToString();
                                 Entidad.latitud = dr["latitud"].ToString();
                                 Entidad.longitud = dr["longitud"].ToString();
+
+                                Entidad.nombreCliente = dr["nombreCliente"].ToString();
+                                Entidad.direccionCliente = dr["direccionCliente"].ToString();
+                                Entidad.operario = dr["operario"].ToString();
 
                                 obj_List.Add(Entidad);
                             }
@@ -7330,11 +7341,27 @@ namespace DSIGE.Dato
                             }
                             else
                             {
-                                var guid = Guid.NewGuid();
-                                   
-                                guidB = guid.ToString("B");
-                                nombreFile = Guid.Parse(guidB) + ".xlsx";
+                                var guid = Guid.NewGuid();                                   
+                                guidB = guid.ToString("B");            
 
+
+                                if (tipoReporte == 1)
+                                {
+                                    nombreFile = "DetalleLibro_" + Guid.Parse(guidB) + ".xlsx";
+                                }
+                                if (tipoReporte == 2)
+                                {
+                                    nombreFile = "Sector_" + Guid.Parse(guidB) + ".xlsx";
+                                }
+                                if (tipoReporte == 3)
+                                {
+                                    nombreFile = "Sucursal_" + Guid.Parse(guidB) + ".xlsx";
+                                }
+                                if (tipoReporte == 4)
+                                {
+                                    nombreFile = "Repartidor_" + Guid.Parse(guidB) + ".xlsx";
+                                }
+                 
                                 FileRuta = System.Web.Hosting.HostingEnvironment.MapPath("~/Temp/" + nombreFile);
                                 FileExcel = ConfigurationManager.AppSettings["Archivos"] + nombreFile;
 
@@ -7403,7 +7430,7 @@ namespace DSIGE.Dato
 
                     oWs.Cells[_fila, pos].Value = "% ENTREGADO"; pos += 1;
                     oWs.Cells[_fila, pos].Value = "% PENDIENTE"; pos += 1;
-                    oWs.Cells[_fila, pos].Value = "ESTADO"; pos += 1;
+                    //oWs.Cells[_fila, pos].Value = "ESTADO"; pos += 1;
 
                     _fila += 1;
 
@@ -7416,23 +7443,49 @@ namespace DSIGE.Dato
                         oWs.Cells[_fila, pos].Value = item["sucursal"].ToString(); pos += 1;
                         oWs.Cells[_fila, pos].Value = item["libro"].ToString(); pos += 1;
                         oWs.Cells[_fila, pos].Value = item["repartidor"].ToString(); pos += 1;
+                                
 
-                        oWs.Cells[_fila, pos].Value = item["recibosEntregar"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["recibosEntregados"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["entregaPendiente"].ToString(); pos += 1;
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["recibosEntregar"].ToString()); 
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["recibosEntregados"].ToString());  
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["entregaPendiente"].ToString()); 
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
 
                         oWs.Cells[_fila, pos].Value = item["fechaRecepcion"].ToString(); pos += 1;
                         oWs.Cells[_fila, pos].Value = item["fechaInicio"].ToString(); pos += 1;
                         oWs.Cells[_fila, pos].Value = item["fechaCierre"].ToString(); pos += 1;
+        
 
-                        oWs.Cells[_fila, pos].Value = item["porcEntregado"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["porcPendiente"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["estado"].ToString(); pos += 1;
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0.00";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["porcEntregado"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0.00";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["porcPendiente"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        //oWs.Cells[_fila, pos].Value = item["estado"].ToString(); pos += 1;
 
                         _fila++;
                     }
 
-                    for (int k = 1; k <= 14; k++)
+                    for (int k = 1; k <= 13; k++)
                     {
                         oWs.Column(k).AutoFit();
                     }
@@ -7466,7 +7519,7 @@ namespace DSIGE.Dato
 
                 using (Excel.ExcelPackage oEx = new Excel.ExcelPackage(_file))
                 {
-                    Excel.ExcelWorksheet oWs = oEx.Workbook.Worksheets.Add("ReporteDetalladoSucursal");
+                    Excel.ExcelWorksheet oWs = oEx.Workbook.Worksheets.Add("ReporteSucursal");
                     oWs.Cells.Style.Font.SetFromFont(new Font("Tahoma", 8));
 
                     oWs.Cells[_fila, pos].Value = "SUCURSAL"; pos += 1;
@@ -7483,9 +7536,27 @@ namespace DSIGE.Dato
 
                         oWs.Cells[_fila, pos].Value = item["sucursal"].ToString(); pos += 1; 
                         oWs.Cells[_fila, pos].Value = item["sector"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["pendientes"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["entregados"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["porcentaje"].ToString(); pos += 1;
+                        //oWs.Cells[_fila, pos].Value = item["pendientes"].ToString(); pos += 1;
+                        //oWs.Cells[_fila, pos].Value = item["entregados"].ToString(); pos += 1;
+                        //oWs.Cells[_fila, pos].Value = item["porcentaje"].ToString(); pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["pendientes"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["entregados"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0.00";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["porcentaje"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
 
                         _fila++;
                     }
@@ -7539,9 +7610,23 @@ namespace DSIGE.Dato
                         pos = 1;
 
                         oWs.Cells[_fila, pos].Value = item["operario"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["pendientes"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["entregados"].ToString(); pos += 1;
-                        oWs.Cells[_fila, pos].Value = item["porcentaje"].ToString(); pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["pendientes"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["entregados"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
+                        pos += 1;
+
+                        oWs.Cells[_fila, pos].Style.Numberformat.Format = "#,##0.00";
+                        oWs.Cells[_fila, pos].Value = Convert.ToDecimal(item["porcentaje"].ToString());
+                        oWs.Cells[_fila, pos].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                        oWs.Cells[_fila, pos].Style.HorizontalAlignment = Style.ExcelHorizontalAlignment.Right; // alinear texto
 
                         _fila++;
                     }

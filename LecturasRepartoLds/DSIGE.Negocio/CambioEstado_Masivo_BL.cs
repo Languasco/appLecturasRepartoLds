@@ -81,6 +81,18 @@ namespace DSIGE.Modelo
         }
 
 
-        
+        public object Capa_Negocio_set_DarBajaReparto(string anio, string mes, int idCargo, int idEstado, int idUsuario)
+        {
+            try
+            {
+                Cls_Dato_CambioEstado Objeto_Dato = new Cls_Dato_CambioEstado();
+                return Objeto_Dato.Capa_Dato_set_DarBajaReparto(anio, mes, idCargo, idEstado, idUsuario);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
     }
 }

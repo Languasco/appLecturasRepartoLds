@@ -108,13 +108,13 @@ namespace DSIGE.Web.Controllers
         }
 
         [HttpPost]
-        public string get_fotosUbicacionOperariosReparto(int idOperario, int anio, int mes , int idCargo )
+        public string get_fotosUbicacionOperariosReparto(int idOperario, int anio, int mes , int idCargo, string fechaReparto, string selfie )
         {
             object loDatos;
             try
             {
                 NUbicacion_Operarios obj_negocio = new NUbicacion_Operarios();
-                loDatos = obj_negocio.Capa_Negocio_get_fotosUbicacionOperariosReparto(idOperario, anio, mes, idCargo);
+                loDatos = obj_negocio.Capa_Negocio_get_fotosUbicacionOperariosReparto(idOperario, anio, mes, idCargo, fechaReparto, selfie);
                 return _Serialize(loDatos, true);
             }
             catch (Exception ex)
@@ -199,6 +199,22 @@ namespace DSIGE.Web.Controllers
             {
                 NUbicacion_Operarios obj_negocio = new NUbicacion_Operarios();
                 loDatos = obj_negocio.Capa_Negocio_get_fotosSuministros(idReparto, anio, mes, idCargo);
+                return _Serialize(loDatos, true);
+            }
+            catch (Exception ex)
+            {
+                return _Serialize(ex.Message, true);
+            }
+        }
+
+        [HttpPost]
+        public string get_fotosSeguimientoOperariosReparto(int idOperario, int anio, int mes, int idCargo, string fechaReparto, string selfie)
+        {
+            object loDatos;
+            try
+            {
+                NUbicacion_Operarios obj_negocio = new NUbicacion_Operarios();
+                loDatos = obj_negocio.Capa_Negocio_get_fotosSeguimientoOperariosReparto(idOperario, anio, mes, idCargo, fechaReparto, selfie);
                 return _Serialize(loDatos, true);
             }
             catch (Exception ex)

@@ -24,6 +24,11 @@ namespace DSIGE.Web.Controllers
         }
 
 
+        public ActionResult darBaja_index()
+        {
+            return View();
+        }
+
         public static string _Serialize(object value, bool ignore = false)
         {
             var SerializerSettings = new JsonSerializerSettings()
@@ -101,11 +106,7 @@ namespace DSIGE.Web.Controllers
                 return _Serialize(ex.Message, true);
             }
         }
-
-    //servicio: id_servicio,
-    //fecha_Asigna: id_fecha_asignacion,
-    //estado: cbo_estado,
-    //operario: cbo_operario,
+ 
 
         [HttpPost]
         public string GenerarAnular_Masivo(int servicio,  string fecha_Asigna, int estado, int operario)
@@ -116,6 +117,21 @@ namespace DSIGE.Web.Controllers
             {
                 CambioEstado_Masivo_BL obj_negocio = new CambioEstado_Masivo_BL();
                 loDatos = obj_negocio.Capa_Negocio_GenerarAnular_Masivo(servicio, fecha_Asigna, estado, operario, ((Sesion)Session["Session_Usuario_Acceso"]).usuario.usu_id);
+                return _Serialize(loDatos, true);
+            }
+            catch (Exception ex)
+            {
+                return _Serialize(ex.Message, true);
+            }
+        }
+
+        public string set_DarBajaReparto(string anio, string mes, int idCargo, int idEstado)
+        {
+            object loDatos;
+            try
+            {
+                CambioEstado_Masivo_BL obj_negocio = new CambioEstado_Masivo_BL();
+                loDatos = obj_negocio.Capa_Negocio_set_DarBajaReparto(anio, mes, idCargo, idEstado, ((Sesion)Session["Session_Usuario_Acceso"]).usuario.usu_id);
                 return _Serialize(loDatos, true);
             }
             catch (Exception ex)

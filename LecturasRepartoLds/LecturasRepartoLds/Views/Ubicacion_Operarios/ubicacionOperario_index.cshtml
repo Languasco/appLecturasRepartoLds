@@ -81,6 +81,15 @@
         background-color: #333 !important;
         color: white !important;
     }
+
+    #legend {
+        font-family: 'Montserrat', sans-serif !important;
+        background: #fff;
+        padding: 10px;
+        margin: 10px;
+        border: 3px solid #000;
+    }
+
 </style>
 
 <script type="text/javascript">
@@ -573,11 +582,14 @@
         }
     }
 
-    function galeriaFotos(idLectura) {
+    function galeriaFotos(idLectura, posicion = 0) {
 
         let anio = document.getElementById('idAnio').value;
         let mes = document.getElementById('idMes').value;
         let sector = document.getElementById('idCargo').value;
+        let fechaReparto = document.getElementById('cboFechaReparto').value;
+
+ 
 
         if (anio == 0 || anio == '0') {
             new PNotify({
@@ -619,6 +631,8 @@
                 anio: anio,
                 mes: mes,
                 idCargo: sector,
+                fechaReparto: fechaReparto,
+                selfie: (posicion == 0) ? 'I' : 'F'
             },
             success: function (res) {
 
@@ -706,8 +720,8 @@
                                 <input type="checkbox" id="chkFechaReparto" style="margin-top: 2px; margin-left: 2px;" value="1" ng-model="obj_paramsFormFiltro.checkFechaReparto" ng-click="change_ChekfechaReparto(obj_paramsFormFiltro.checkFechaReparto)">
                                 <label for="chkFechaReparto" style=" font-size: 13px; font-weight: bold; color: black;"> Fecha Reparto </label>
                             </div>
-                            <select id="cboFechaReparto" class="select2" disabled style="width:98%" ng-model="obj_paramsFormFiltro.fechaReparto">
-                                <option value=0>--[ SELECCIONE ]-- </option>
+                            <select id="cboFechaReparto" class="select2" disabled style="width:98%" ng-model="fechaReparto">
+                                <option value='0'>--[ SELECCIONE ]-- </option>
                                 <option ng-repeat="item in fechasRepartos" value="{{item.fechaReparto}}">
                                     {{item.fechaReparto}}
                                 </option>

@@ -472,7 +472,6 @@
     <Content Include="Content\Imagen\loader.gif" />
     <Content Include="Content\Imagen\logoActasVeritas.jpg" />
     <Content Include="Content\Imagen\Logo_Inico.jpeg" />
-    <Content Include="Content\Imagen\logo_veritas - copia.jpeg" />
     <Content Include="Content\Imagen\Logo_Veritas.jpeg" />
     <Content Include="Content\Imagen\mapa.png" />
     <Content Include="Content\Imagen\m_blue.png" />
@@ -887,13 +886,16 @@
     <Content Include="Views\ReportesReparto\consultaReparto_index.cshtml" />
     <Content Include="Views\ReportesReparto\consultaSuministro_index.cshtml" />
     <Content Include="Views\ReportesReparto\consultaRepartoDetallado_index.cshtml" />
+    <Content Include="Views\CambioEstado_Masivo\darBaja_index.cshtml" />
+    <Content Include="Temp\Descargas\1_FotosDescarga.zip" />
+    <Content Include="Temp\Descargas\99_Descarga.zip" />
+    <Content Include="Temp\pdf\pruebas.pdf" />
+    <Content Include="Temp\pdf\pruebasxxx.pdf" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Files_UnidadLectura\" />
     <Folder Include="Models\" />
-    <Folder Include="Temp\Descargas\" />
-    <Folder Include="Temp\pdf\" />
     <Folder Include="Upload\" />
   </ItemGroup>
   <ItemGroup>

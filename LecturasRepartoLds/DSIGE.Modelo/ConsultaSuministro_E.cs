@@ -15,6 +15,8 @@ namespace DSIGE.Modelo
 		public string ruta { get; set; }
 		public string sucursal { get; set; }
 		public string tieneFoto { get; set; }
+
+		public string tieneMapa { get; set; }
 		public string inicioReparto { get; set; }
 		public string finReparto { get; set; }
 		public string fechaMaxReparto { get; set; }
@@ -22,6 +24,10 @@ namespace DSIGE.Modelo
 		public string estado { get; set; }
 		public string latitud { get; set; }
 		public string longitud { get; set; }
+
+		public string nombreCliente { get; set; }
+		public string direccionCliente { get; set; }
+		public string operario { get; set; }
 
 	}
 }

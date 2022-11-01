@@ -443,7 +443,51 @@
                     }
                 });
             }
- 
+
+
+            $scope.galeriaFotosSuministro = function(idReparto) {
+
+                posicionActual = 0;
+
+                $.ajax({
+                    async: true,
+                    beforeSend: function (xhr) { },
+                    url: '../Ubicacion_Operarios/get_fotosSuministros',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        idReparto: idReparto,
+                        anio: 0,
+                        mes: 0,
+                        idCargo: 0,
+                    },
+                    success: function (res) {
+
+                        $("div").remove("#x");
+                        var $DivCorre = $('#corre');
+
+                        $('#fotos').modal();
+
+                        if (res.ok) {
+                            listPhotos = [];
+                            $.each(res.data, function (i, v) {
+                                listPhotos.push({
+                                    id: i,
+                                    url: res.data[i].url
+                                })
+                            });
+                            $DivCorre.append('<div id="x" class="item active"><img id="imgRotate" src="' + listPhotos[0].url + '" alt="..." style="width: 600px; height: 600PX; text-align: center;" /></div>');
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    },
+                    error: function (xhr) {
+                        alert('Algo salió mal, por favor intente de nuevo.');
+                    }
+                });
+            }
+
+
         });
 
 
@@ -544,7 +588,12 @@
                                 <th>Fin Reparto</th>
                                 <th>Fecha Maxima Reparto</th>
                                 <th>Fecha Recepcion</th>
- 
+                                
+                                <th>Cliente</th>
+                                <th>Direccion Cliente</th>
+                                <th>Operario</th>
+
+
                             </tr>
                         </thead>
                         <tbody>
@@ -555,16 +604,21 @@
                                 <td>{{item.ruta}}</td>
                                 <td>{{item.sucursal}}</td>
                                 <td class="text-center">
-                                      <img src="../Content/Imagen/foto.png" title="Ver Foto" style="cursor:pointer " ng-click="galeriaFotos(item.id_Reparto);">
+                                    <img src="../Content/Imagen/foto.png" ng-show="item.tieneFoto == 'SI' ? true: false" title="Ver Foto" style="cursor:pointer " ng-click="galeriaFotosSuministro(item.id_Reparto);">
                                 </td>
 
                                 <td class="text-center">
-                                    <img src="../Content/Imagen/mapa.png" title="Ver Mapa" style="cursor:pointer " ng-click="abrilModal_mapa(item.latitud, item.longitud);">
+                                    <img src="../Content/Imagen/mapa.png" ng-show="item.tieneMapa == 'SI' ? true: false" title="Ver Mapa" style="cursor:pointer " ng-click="abrilModal_mapa(item.latitud, item.longitud);">
                                 </td>
                                 <td>{{item.inicioReparto}}</td>
                                 <td>{{item.finReparto}}</td>
                                 <td>{{item.fechaMaxReparto}}</td>
                                 <td>{{item.fechaRecepcion}}</td>
+
+                                <td>{{item.nombreCliente}}</td>
+                                <td>{{item.direccionCliente}}</td>
+                                <td>{{item.operario}}</td>
+
                             </tr>
                         </tbody>
                     </table>

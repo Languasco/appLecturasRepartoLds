@@ -1,0 +1,517 @@
+﻿
+
+@using DSIGE
+@using DSIGE.Modelo
+@using DSIGE.Negocio
+
+@{
+    ViewBag.Title = ".:: Dar de Baja ::.";
+    Layout = "~/Views/Shared/_LayoutPrincipal.cshtml";
+}
+
+@section instances{
+
+    @Styles.Render("~/Content/dataTables-bootstrap/css/dataTables.bootstrap.min.css")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/jquery.dataTables.min.js")
+    @Scripts.Render("~/Content/dataTables-bootstrap/js/dataTables.bootstrap.min.js")
+
+    @Styles.Render("~/Content/bootstrap-datepicker/css/bootstrap-datepicker.min.css")
+    @Scripts.Render("~/Content/bootstrap-datepicker/js/bootstrap-datepicker.min.js")
+    @Scripts.Render("~/Content/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js")
+
+    @Scripts.Render("~/Content/bootstrap/js/bootstrap-filestyle.min.js")
+    @Scripts.Render("~/Scripts/jquery.fileDownload.js")
+    @Scripts.Render("~/Content/angular/angular.js")
+
+
+}
+
+@section styles{
+    <style type="text/css">
+        .nav-tabs {
+            border-bottom: 0;
+        }
+
+        #_archivo.btn-info {
+            background-image: none;
+            color: inherit;
+            background-color: inherit !important;
+        }
+
+        .datepicker {
+            width: 200px;
+        }
+
+        body {
+            font-size: 10.5px;
+            font-family: tahoma;
+        }
+
+        .label-primary {
+            background-color: #337ab7;
+            font-size: 11px;
+        }
+
+        .label-danger {
+            background-color: red;
+            font-size: 11px;
+        }
+
+        .resaltado {
+            color: red;
+            text-decoration: underline;
+        }
+
+        .julio .table, th {
+            background-color: #333 !important;
+            color: white !important;
+        }
+
+
+        .menuBoton, .ul .li {
+            list-style-type: none;
+            padding: 10px;
+            /*display: inline-table;*/
+            width: 200px !important;
+        }
+
+        .ui-pnotify-text {
+            display: block;
+            font-size: 13px !important;
+            font-weight: bold
+        }
+
+        #Principal {
+            width: 700px;
+            height: 500px;
+        }
+
+        .modal {
+            z-index: 2000 !important;
+        }
+
+        span.label.label-info {
+            font-size: 12px !important;
+        }
+
+        span.label.label-success {
+            font-size: 12px !important;
+        }
+
+
+        .tableFixHeadModal {
+            max-height: 700px;
+        }
+
+        .tableFixHeadModal {
+            overflow-y: auto;
+            max-height: 350px;
+        }
+
+            .tableFixHeadModal thead th {
+                position: sticky !important;
+                top: 0;
+            }
+
+            .tableFixHeadModal .table tbody tr:hover td, .table tbody tr:hover th, .table tbody tr:hover th a {
+                background-color: #ddd !important;
+                color: black !important;
+            }
+
+        .img-thumbnail {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .list-group {
+            margin-bottom: 0px !important;
+        }
+
+        .list-group-item {
+            padding: 9px 10px !important;
+            border-left: 1px solid #2196f3 !important;
+        }
+    </style>
+}
+
+@section scripts{
+
+    <script type="text/javascript">
+
+
+        function filterFloat(evt, input) {
+            var key = window.Event ? evt.which : evt.keyCode;
+
+
+            var chark = String.fromCharCode(key);
+            var tempValue = input.value + chark;
+            if (key >= 48 && key <= 58) {
+                if (filter(tempValue) === false) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                if (key == 8 || key == 13 || key == 0) {
+                    return true;
+                } else if (key == 46) {
+                    if (filter(tempValue) === false) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
+        function filter(__val__) {
+            var preg = /^([0-9]+\:?[0-9]{0,2})$/;
+            if (preg.test(__val__) === true) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+
+    </script>
+
+    <script type="text/javascript">
+
+        $(function () {
+            setTimeout(function () {
+                $(".select2").select2();
+            }, 0);
+        });
+
+        var app = angular.module('MyApp', []).directive('onFinishRender', function ($timeout) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attr) {
+                    if (scope.$last === true) {
+                        $timeout(function () {
+                            scope.$emit('ngRepeatFinished');
+                        });
+                    }
+                }
+            }
+        }).directive('fileModel', ['$parse', function ($parse) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attrs) {
+                    var model = $parse(attrs.fileModel);
+                    var modelSetter = model.assign;
+
+                    element.bind('change', function () {
+                        scope.$apply(function () {
+                            modelSetter(scope, element[0].files[0]);
+                        });
+                    });
+                }
+            };
+        }]);
+
+        app.service('fileUpload', ['$http', function ($http) {
+            this.uploadFileToUrl = function (idlocal, file, uploadUrl) {
+
+                var fd = new FormData();
+                fd.append('file', file);
+                fd.append('idlocal', idlocal);
+                $http.post(uploadUrl, fd, {
+
+                    transformRequest: angular.identity,
+                    headers: { 'Content-Type': undefined }
+                })
+                    .success(function (data) {
+
+                    })
+                    .error(function () {
+
+                    });
+
+            }
+        }]);
+
+        app.controller('MyController', function ($scope, $timeout, $http, fileUpload) {
+
+
+            const mesesGeneral = () => {
+                return [{ mes: 1, valor: 'Enero' }, { mes: 2, valor: 'Febrero' }, { mes: 3, valor: 'Marzo' }, { mes: 4, valor: 'Abril' }, { mes: 5, valor: 'Mayo' }, { mes: 6, valor: 'Junio' },
+                { mes: 7, valor: 'Julio' }, { mes: 8, valor: 'Agosto' }, { mes: 9, valor: 'Setiembre' }, { mes: 10, valor: 'Octubre' }, { mes: 11, valor: 'Nombre' }, { mes: 12, valor: 'Diciembre' },
+                ]
+            }
+
+            const aniosGeneral = () => {
+                return [{ anio: 2020, valor: '2020' }, { anio: 2021, valor: '2021' }, { anio: 2022, valor: '2022' }, { anio: 2023, valor: '2023' }, { anio: 2024, valor: '2024' }, { anio: 2025, valor: '2025' },
+                { anio: 2026, valor: '2026' }, { anio: 2027, valor: '2027' }, { anio: 2028, valor: '2028' }, { anio: 2029, valor: '2029' }, { anio: 2030, valor: '2030' }, { anio: 2031, valor: '2031' }
+                ]
+            }
+
+            $scope.aniosSistema = [];
+            $scope.mesesSistema = [];
+
+            $scope.aniosSistema = aniosGeneral();
+            $scope.mesesSistema = mesesGeneral();
+
+            const get_anio = () => {
+                const anio = new Date().getFullYear();
+                return String(anio);
+            }
+            const get_mes = () => {
+                const mes = new Date().getMonth() + 1;
+                return String(mes);
+            }
+
+            $scope.obj_paramsFormFiltro = {
+                anio: '',
+                mes: '',
+                idCargo: '0',
+                idEstado: '0',
+            }
+
+            $scope.inicializarVariables = function () {
+                $scope.obj_paramsFormFiltro = {
+                    anio: get_anio(),
+                    mes: get_mes(),
+                    idCargo: '0',
+                    idEstado: '1'
+                }
+                setTimeout(function () {
+                    $('#idAnio').val(get_anio()).trigger('change');
+                    $('#idMes').val(get_mes()).trigger('change');
+                    $('#idCargo').val('0').trigger('change');
+                    $('#idEstado').val('0').trigger('change');
+                }, 0);
+            }
+
+
+            $scope.cargos = [];
+            $scope.listando_cargos = function () {
+                $('.sige-load').show();
+                var variables = {
+                    method: 'POST',
+                    url: '../AsignaOrdenTrabajo/getCargos',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (res) {
+                        $('.sige-load').hide();
+                        if (res.ok) {
+                            $scope.cargos = res.data;
+                        } else {
+                            alert(JSON.stringify(res.data))
+                        }
+                    })
+                    .error(function () {
+                        $('.sige-load').hide();
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+            $scope.listando_cargos();
+
+            $scope.ListaEstados = [];
+            $scope.listando_Estados = function () {
+                var variables = {
+                    method: 'POST',
+                    url: '../LecturaEnviarCliente/ListandoEstadosAll',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+                $http(variables)
+                    .success(function (data) {
+                        $scope.ListaEstados = [];
+                        for (obj of data) {
+                            if (obj.id_Estado == 3 || obj.id_Estado == 5) {
+                                $scope.ListaEstados.push(obj);
+                            }
+                        }
+                    })
+                    .error(function () {
+                        alert('Lo sentimos, Ocurrio un problema, vuelva a intentar.')
+                    });
+            };
+            $scope.listando_Estados();
+ 
+            $scope.GenerarCambioEstado = function () {
+
+                if ($scope.obj_paramsFormFiltro.anio == 0 || $scope.obj_paramsFormFiltro.anio == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Seleccione el Año.',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                if ($scope.obj_paramsFormFiltro.mes == 0 || $scope.obj_paramsFormFiltro.mes == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Mes',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+
+                if ($scope.obj_paramsFormFiltro.idEstado == 0 || $scope.obj_paramsFormFiltro.idEstado == '0') {
+                    new PNotify({
+                        title: 'Sistemas',
+                        text: 'Por favor seleccione el Estado',
+                        type: 'error'
+                    });
+                    return;
+                }
+ 
+
+                (new PNotify({
+                    title: 'Sistemas Confirmacion ',
+                    text: 'Esta seguro de Anular?, una vez cambiado no hay marcha atras..',
+                    icon: 'glyphicon glyphicon-question-sign',
+                    hide: false,
+                    confirm: {
+                        confirm: true
+                    },
+                    buttons: {
+                        closer: false,
+                        sticker: false
+                    },
+                    history: {
+                        history: false
+                    }
+                })).get().on('pnotify.confirm', function () {
+
+                    $('.sige-load').show();
+                    var variables = {
+                        method: 'POST',
+                        url: '../CambioEstado_Masivo/set_DarBajaReparto',
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        data: {
+                            anio: $scope.obj_paramsFormFiltro.anio,
+                            mes: $scope.obj_paramsFormFiltro.mes,
+                            idCargo: $scope.obj_paramsFormFiltro.idCargo,
+                            idEstado: $scope.obj_paramsFormFiltro.idEstado,
+                        }
+                    }
+                    $http(variables)
+                        .success(function (res) {
+                            $('.sige-load').hide();
+                            if (res.ok) {
+                                new PNotify({
+                                    title: 'Sistemas',
+                                    text: 'Proceso de Cambio de Estado, Realizado Correctamente.',
+                                    type: 'success'
+                                });
+                            } else {
+                                alert(JSON.stringify(res.data));
+                            }
+                        })
+                        .error(function () {
+                            $('.sige-load').hide();
+                            alert('Ocurrio un problema con la conexion, vuelva a intentar.')
+                        });
+                }).on('pnotify.cancel', function () {
+
+                });
+            }
+
+
+
+        });
+
+
+    </script>
+}
+
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+
+    <div ng-app="MyApp" ng-controller="MyController" ng-init="inicializarVariables()">
+        <div class="panel panel-oscuro ">
+            <div class="panel-heading">
+                <h6><i class="fa fa-table fa-lg"></i> DAR DE BAJA REPARTOS </h6>
+            </div>
+            <div class="panel-body">
+
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="idAnio" class="control-label">Año</label>
+                                <br />
+                                <select class=" select2" id="idAnio" style="width:98%" ng-model="obj_paramsFormFiltro.anio">
+                                    <option value="0" selected="selected"> [-SELEC-]</option>
+                                    <option ng-repeat="item in aniosSistema" value="{{item.anio}}"> {{item.valor}} </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="idMes" class="control-label">Mes</label>
+                                <br />
+                                <select class="select2" id="idMes" style="width:98%" ng-model="obj_paramsFormFiltro.mes">
+                                    <option value="0" selected="selected"> [-SELEC-]</option>
+                                    <option ng-repeat="item in mesesSistema" value="{{item.mes}}"> {{item.valor}} </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="idCargo" class="control-label">Cargo</label>
+                                <br />
+                                <select class=" select2" id="idCargo" style="width:98%" ng-model="obj_paramsFormFiltro.idCargo">
+                                    <option value="0" selected="selected"> [-- TODOS --]</option>
+                                    <option ng-repeat="item in cargos" value="{{item.id}}"> {{item.descripcion}} </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="idEstado" class="control-label">Estado</label>
+                                <br />
+                                <select class=" select2" id="idEstado" style="width:98%" ng-model="obj_paramsFormFiltro.idEstado">
+                                    <option value=0>--[ SELECCIONE ]-- </option>
+                                    <option ng-repeat="item in ListaEstados" value="{{item.id_Estado}}">
+                                        {{item.descripcion_estado}}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="text-center"> 
+                            <button class="btn btn-danger" ng-click="GenerarCambioEstado();" title="Anular Carga"><span class="glyphicon glyphicon-record"></span> DAR DE BAJA</button>
+                        </div>
+
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+        </div>
+
+
+
+    </div>
+</body>
+</html>
+
+
+
+
+

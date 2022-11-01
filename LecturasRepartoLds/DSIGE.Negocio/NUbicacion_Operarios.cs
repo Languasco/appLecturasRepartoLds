@@ -58,12 +58,12 @@ namespace DSIGE.Negocio
             }
         }
 
-        public object Capa_Negocio_get_fotosUbicacionOperariosReparto(int idOperario, int anio, int mes, int idCargo)
+        public object Capa_Negocio_get_fotosUbicacionOperariosReparto(int idOperario, int anio, int mes, int idCargo, string fechaReparto, string selfie)
         {
             try
             {
                 DUbicacion_Operarios Objeto_Dato = new DUbicacion_Operarios();
-                return Objeto_Dato.Capa_Dato_get_fotosUbicacionOperariosReparto(idOperario, anio, mes, idCargo);
+                return Objeto_Dato.Capa_Dato_get_fotosUbicacionOperariosReparto(idOperario, anio, mes, idCargo, fechaReparto, selfie);
             }
             catch (Exception e)
             {
@@ -138,6 +138,18 @@ namespace DSIGE.Negocio
             }
         }
 
+        public object Capa_Negocio_get_fotosSeguimientoOperariosReparto(int idOperario, int anio, int mes, int idCargo, string fechaReparto, string selfie)
+        {
+            try
+            {
+                DUbicacion_Operarios Objeto_Dato = new DUbicacion_Operarios();
+                return Objeto_Dato.Capa_Dato_get_fotosSeguimientoOperariosReparto(idOperario, anio, mes, idCargo, fechaReparto, selfie);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
 
     }
 }

@@ -139,7 +139,7 @@ namespace DSIGE.Dato
                         cmd.Parameters.Add("@mes", SqlDbType.Int).Value = mes;
                         cmd.Parameters.Add("@idCargo", SqlDbType.Int).Value = idCargo;
                         cmd.Parameters.Add("@idOperario", SqlDbType.Int).Value = idOperario;
-                        cmd.Parameters.Add("@fechaReparto", SqlDbType.VarChar).Value = idOperario;
+                        cmd.Parameters.Add("@fechaReparto", SqlDbType.VarChar).Value = fechaReparto;
 
                         DataTable dt_detalle = new DataTable();
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))
@@ -183,7 +183,7 @@ namespace DSIGE.Dato
         }
 
 
-        public object Capa_Dato_get_fotosUbicacionOperariosReparto(int idOperario, int anio, int mes, int idCargo)
+        public object Capa_Dato_get_fotosUbicacionOperariosReparto(int idOperario, int anio, int mes, int idCargo, string fechaReparto, string selfie)
         {
             Resultado res = new Resultado();
             try
@@ -200,6 +200,8 @@ namespace DSIGE.Dato
                         cmd.Parameters.Add("@anio", SqlDbType.Int).Value = anio;
                         cmd.Parameters.Add("@mes", SqlDbType.Int).Value = mes;
                         cmd.Parameters.Add("@idCargo", SqlDbType.Int).Value = idCargo;
+                        cmd.Parameters.Add("@fechaReparto", SqlDbType.VarChar).Value = fechaReparto;
+                        cmd.Parameters.Add("@selfie", SqlDbType.VarChar).Value = selfie;
 
                         DataTable dt_detalle = new DataTable();
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))
@@ -396,6 +398,44 @@ namespace DSIGE.Dato
                         cmd.Parameters.Add("@anio", SqlDbType.Int).Value = anio;
                         cmd.Parameters.Add("@mes", SqlDbType.Int).Value = mes;
                         cmd.Parameters.Add("@idCargo", SqlDbType.Int).Value = idCargo;
+
+                        DataTable dt_detalle = new DataTable();
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+                            da.Fill(dt_detalle);
+                        }
+                        res.ok = true;
+                        res.data = dt_detalle;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                res.ok = false;
+                res.data = ex.Message;
+            }
+            return res;
+        }
+
+        public object Capa_Dato_get_fotosSeguimientoOperariosReparto(int idOperario, int anio, int mes, int idCargo, string fechaReparto, string selfie)
+        {
+            Resultado res = new Resultado();
+            try
+            {
+                using (SqlConnection cn = new SqlConnection(cadenaCnx))
+                {
+                    cn.Open();
+
+                    using (SqlCommand cmd = new SqlCommand("SP_S_UBICACION_OPERARIOS_REPARTO_FOTO", cn))
+                    {
+                        cmd.CommandTimeout = 0;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@idOperario", SqlDbType.Int).Value = idOperario;
+                        cmd.Parameters.Add("@anio", SqlDbType.Int).Value = anio;
+                        cmd.Parameters.Add("@mes", SqlDbType.Int).Value = mes;
+                        cmd.Parameters.Add("@idCargo", SqlDbType.Int).Value = idCargo;
+                        cmd.Parameters.Add("@fechaReparto", SqlDbType.VarChar).Value = fechaReparto;
+                        cmd.Parameters.Add("@selfie", SqlDbType.VarChar).Value = selfie;
 
                         DataTable dt_detalle = new DataTable();
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))

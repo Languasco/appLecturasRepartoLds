@@ -126,6 +126,38 @@
             padding: 9px 10px !important;
             border-left: 1px solid #2196f3 !important;
         }
+
+        #legend {
+            font-family: 'Montserrat', sans-serif !important;
+            background: #fff;
+            padding: 10px;
+            margin: 10px;
+            border: 3px solid #000;
+        }
+
+        .fullscreen-modal .modal-dialog {
+          margin: 0;
+          margin-right: auto;
+          margin-left: auto;
+          width: 100%;
+        }
+        @@media (min-width: 768px) {
+          .fullscreen-modal .modal-dialog {
+            width: 750px;
+          }
+        }
+        @@media (min-width: 992px) {
+            .fullscreen-modal .modal-dialog {
+                width: 970px;
+            }
+        }
+        @@media (min-width: 1200px) {
+            .fullscreen-modal .modal-dialog {
+                width: 1170px;
+            }
+        }
+
+
     </style>
 }
 
@@ -292,7 +324,9 @@
                     $('#idAnio').val(get_anio()).trigger('change');
                     $('#idMes').val(get_mes()).trigger('change');
                 }, 0);
+ 
 
+   
             }
 
             $scope.cargos = [];
@@ -555,7 +589,7 @@
                                     text: 'Proceso Realizado Correctamente.',
                                     type: 'success'
                                 });
-                                $scope.mostrandoInformacion_consultaRepartosCab();
+                                $scope.mostrandoInformacion_consultaRepartosCab();                                 
                             } else {
                                 alert(JSON.stringify(res.data))
                             }
@@ -635,10 +669,8 @@
             };
 
 
-            $scope.abrirModal_libro = function (item) {
-                /*    $('#modal_libro').modal('toggle');*/
+            $scope.abrirModal_libro = function (item) { 
                 $scope.mostrandoSuministrosAsignados(item);
-
             }
 
             $scope.suministrosAsignador = [];
@@ -701,12 +733,81 @@
                 }
             }
 
-            function InicializarMapa() {
+
+            const iconosLeyendas = () => {
+
+                var legend = null;
+
+                const icons = {
+                    Suministro: {
+                        name: 'Suministro',
+                        icon: '../Content/Imagen/icon_blue.png',
+                    },
+                    Sum_Pendiente: {
+                        name: 'Suministro Pendiente',
+                        icon: '../Content/Imagen/sum_pendiente.png',
+                    },
+                    Sum_Foto: {
+                        name: 'Suministro Foto',
+                        icon: '../Content/Imagen/camara.png',
+                    },
+                };
+
+                 legend = document.getElementById('legend');
+
+                //console.log(legend)
+                //if (legend == null) {
+                //    alert('entroo')
+                //    const div = document.createElement("div");
+                //    div.setAttribute("id", "legend");   // Vuelve a añadir id="page"
+
+
+                //    console.log(div)
+
+                //    legend = document.getElementById('legend');
+                //}
+
+ 
+                for (var key in icons) {
+
+                    const type = icons[key];
+                    const name = type.name;
+                    const icon = type.icon;
+
+                    let div = document.createElement('div');
+
+                    if (name == 'Suministro') {
+                        div.innerHTML = '<img src="' + icon + '" style=" margin-left: -5px;"> ' + name;
+                    }
+                    else if (name == 'Suministro Foto') {
+                        div.innerHTML = '<img src="' + icon + '" style=" margin-left: 0px;"> ' + name;
+                    }
+                    else if (name == 'Suministro Pendiente') {
+                        div.innerHTML = '<img src="' + icon + '" style=" margin-left: -4px;"> ' + name;
+                    }
+                    else {
+                        div.innerHTML = '<img src="' + icon + '"> ' + name;
+                    }
+                    legend.appendChild(div);
+                }
+
+                legend.style.cssText = 'color: black;font-weight: 800; margin-left: 10px!important ; margin-top: 10px !important;';
+
+
+                $scope.map.controls[google.maps.ControlPosition.TOP_LEFT].push(legend);
+
+ 
+
+            }
+
+
+
+            function InicializarMapaGlobal() {
 
                 infoWindow = new google.maps.InfoWindow();
 
                 $scope.map = new google.maps.Map(document.getElementById('map'), {
-                    zoom: 12,
+                    zoom: 11,
                     center: { lat: -12.046374, lng: -77.0427934 },
                     mapTypeControl: true,
                     mapTypeControlOptions: {
@@ -723,6 +824,35 @@
                         position: google.maps.ControlPosition.LEFT_TOP
                     }
                 });
+                setTimeout(function () {
+                    iconosLeyendas()
+                }, 0);
+ 
+            };
+
+            function InicializarMapa() {
+
+                infoWindow = new google.maps.InfoWindow();
+
+                $scope.map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 11,
+                    center: { lat: -12.046374, lng: -77.0427934 },
+                    mapTypeControl: true,
+                    mapTypeControlOptions: {
+                        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                        position: google.maps.ControlPosition.TOP_CENTER
+                    },
+                    zoomControl: true,
+                    zoomControlOptions: {
+                        position: google.maps.ControlPosition.LEFT_CENTER
+                    },
+                    scaleControl: true,
+                    streetViewControl: true,
+                    streetViewControlOptions: {
+                        position: google.maps.ControlPosition.LEFT_TOP
+                    }
+                });
+ 
             };
 
             $scope.limpiarMapa = function () {
@@ -742,14 +872,18 @@
                     return;
                 }
 
-                InicializarMapa();
-
                 setTimeout(function () {
-                    $('#modal_mapa').modal({ show: 'true' });
+                    /*      $('#modal_mapa').modal({ show: 'true' });*/
+                    $("#modal_mapa").modal("show");
                     $("#map").css("width", "100%");
+
+                    InicializarMapaGlobal();
+
                 }, 0);
 
                 $scope.ubicacionSuministros(item)
+
+ 
             }
 
 
@@ -811,19 +945,24 @@
                 ContenidoMarker += '<tr><td><strong>Cliente </strong></td><td>: ' + info.cliente + '</td></tr>';
                 ContenidoMarker += '<tr><td><strong>Operador </strong></td><td>: ' + info.operario + ' </td></tr>';
                 if (info.tieneFoto == 'SI') {
-                    ContenidoMarker += '<tr><td colspan="2" style="text-align:center;"><strong><a onclick="galeriaFotos(' + info.id_Reparto + ');" href="#">Ver Foto Suministro</a></strong></td></tr>';
+                    ContenidoMarker += '<tr><td colspan="2" style="text-align:center;"><strong><a onclick="galeriaFotosSuministro(' + info.id_Reparto + ');" href="#">Ver Foto Suministro</a></strong></td></tr>';
                 }
                 ContenidoMarker += '</table>';
                 ContenidoMarker += '</div>';
-
+                 
                 if (info.estado == '7' || info.estado == '8') {
-                    icono = '../Content/Imagen/m_blue.png',
+                    icono = '../Content/Imagen/icon_blue.png',
                         titulo = 'SUMINISTRO';
                 }
-                else {
-                    icono = '../Content/Imagen/m_red.png',
+                else if (info.estado == '5' || info.estado == '5') {
+                    icono = '../Content/Imagen/sum_pendiente.png',
                         titulo = 'SUMINISTRO NO VISITADO';
                 }
+                else {
+                    icono = '../Content/Imagen/camara.png',
+                        titulo = 'SUMINISTRO CON FOTO';
+                }
+
 
                 var marker = new google.maps.Marker({
                     map: $scope.map,
@@ -881,24 +1020,59 @@
             }
         }
 
-        function galeriaFotos(id_Reparto) {
+        function galeriaFotosSuministro(idReparto) {
 
-            $('#fotos').modal();
+            let anio = document.getElementById('idAnio').value;
+            let mes = document.getElementById('idMes').value;
+            let sector = document.getElementById('idCargo').value;
+
+            if (anio == 0 || anio == '0') {
+                new PNotify({
+                    title: 'Sistemas',
+                    text: 'Seleccione el Año.',
+                    type: 'error'
+                });
+                return;
+            }
+
+            if (mes == 0 || mes == '0') {
+                new PNotify({
+                    title: 'Sistemas',
+                    text: 'Por favor seleccione el Mes',
+                    type: 'error'
+                });
+                return;
+            }
+
+            if (sector == 0 || sector == '0') {
+                new PNotify({
+                    title: 'Sistemas',
+                    text: 'Por favor seleccione el Cargo',
+                    type: 'error'
+                });
+                return;
+            }
+
             posicionActual = 0;
 
             $.ajax({
                 async: true,
                 beforeSend: function (xhr) { },
-                url: '../Ubicacion_Operarios/get_fotosUbicacionOperariosReparto',
+                url: '../Ubicacion_Operarios/get_fotosSuministros',
                 type: 'POST',
                 dataType: 'json',
                 data: {
-                    idLectura: id_Reparto,
+                    idReparto: idReparto,
+                    anio: anio,
+                    mes: mes,
+                    idCargo: sector,
                 },
                 success: function (res) {
 
                     $("div").remove("#x");
                     var $DivCorre = $('#corre');
+
+                    $('#fotos').modal();
 
                     if (res.ok) {
                         listPhotos = [];
@@ -918,7 +1092,6 @@
                 }
             });
         }
-
 
     </script>
 }
@@ -1013,18 +1186,23 @@
                         <thead>
                             <tr>
                                 @*<th>
-                                        <div class="checkbox clip-check check-danger checkbox-inline" style=" margin-bottom: -5px;">
-                                            <input type="checkbox" id="checkboxAll" value="1" ng-model="checkedAll" ng-click="checkedAll_OrdenTrabajo(checkedAll,1)">
-                                            <label for="checkboxAll">
-                                            </label>
-                                        </div>
-                                    </th>*@
+            <div class="checkbox clip-check check-danger checkbox-inline" style=" margin-bottom: -5px;">
+                <input type="checkbox" id="checkboxAll" value="1" ng-model="checkedAll" ng-click="checkedAll_OrdenTrabajo(checkedAll,1)">
+                <label for="checkboxAll">
+                </label>
+            </div>
+        </th>*@
                                 <th>Sucursal</th>
                                 <th>Zona</th>
                                 <th>Repartidor</th>
 
                                 <th>Total Libro</th>
                                 <th>Ordinarios</th>
+
+                                <th>Ord. Rep</th>
+                                <th>Ord. % Rep</th>
+ 
+
                                 <th>Reclamos</th>
                                 <th>Rec. Rep</th>
                                 <th>Rec. % Rep</th>
@@ -1042,19 +1220,24 @@
                         <tbody>
                             <tr ng-repeat="item in repartosCab">
                                 @*<td>
-                                        <div class="checkbox clip-check check-primary checkbox-inline" style="margin-bottom: -13px !important;   margin-top: -19px;">
-                                            <input type="checkbox" id="checkbox{{$index}}" value="true" ng-disabled={{item.disabled}} ng-model="item.checkeado">
-                                            <label for="checkbox{{$index}}">
-                                            </label>
-                                        </div>
-                                    </td>*@
+            <div class="checkbox clip-check check-primary checkbox-inline" style="margin-bottom: -13px !important;   margin-top: -19px;">
+                <input type="checkbox" id="checkbox{{$index}}" value="true" ng-disabled={{item.disabled}} ng-model="item.checkeado">
+                <label for="checkbox{{$index}}">
+                </label>
+            </div>
+        </td>*@
                                 <td>{{item.sucursal}}</td>
                                 <td>{{item.zona}}</td>
                                 <td class="text-center" ng-click="abrilModal_mapa(item);" style="text-decoration: underline green; cursor:pointer">
-                                    {{item.operario}}      <img src="../Content/Imagen/mapa.png" title="Ver Mapa" style="cursor:pointer " >
+                                    {{item.operario}}      <img src="../Content/Imagen/mapa.png" title="Ver Mapa" style="cursor:pointer ">
                                 </td>
                                 <td style="text-align:right">{{item.totalLibro}}</td>
                                 <td style="text-align:right">{{item.ordinario}}</td>
+
+                                <td style="text-align:right">{{item.ordinarioRep}}</td>
+                                <td style="text-align:right">{{item.ordinarioPorcRep}}</td>
+
+
                                 <td style="text-align:right">{{item.reclamos}}</td>
                                 <td style="text-align:right">{{item.recRep}}</td>
                                 <td style="text-align:right">{{item.recPorcentajeRep}}</td>
@@ -1065,8 +1248,8 @@
                                 <td>{{item.inicioReparto}}</td>
                                 <td>{{item.finReparto}}</td>
 
-                                <td style="text-align:center">         
-                                        <img src="../Content/Imagen/foto.png" title="Ver Libro" style="cursor:pointer " ng-click="abrirModal_libro(item);">
+                                <td style="text-align:center">
+                                    <img src="../Content/Imagen/foto.png" ng-show="item.verLibro == 'SI' ? true: false" title="Ver Libro" style="cursor:pointer " ng-click="abrirModal_libro(item);">
                                 </td>
                                 <td>{{item.plazo}}</td>
 
@@ -1166,7 +1349,7 @@
             </div>
         </div>
 
-        <div class="modal fade" id="modal_mapa" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal fullscreen-modal fade" id="modal_mapa" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -1177,8 +1360,22 @@
                         <div class="row">
                             <div class="col-md-12 modal_body_map">
                                 <div class="location-map" id="location-map">
-                                    <div style="width: 600px; height: 400px;" id="map"></div>
+                                    <div style="width: 600px; height: 400px;" id="map">
+                                        <div id="legend" style="margin-top : 15px ; margin-left: 5px"> </div>
+                                    </div>
                                 </div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
+                                <div id="legend" style="margin-top : 15px ; margin-left: 5px ; display:none"><h3></h3></div>
                             </div>
                         </div>
                     </div>

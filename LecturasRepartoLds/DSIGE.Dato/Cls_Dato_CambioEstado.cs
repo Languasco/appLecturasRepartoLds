@@ -77,10 +77,55 @@ namespace DSIGE.Dato
             return Resultado;
         }
 
-        
+        public object Capa_Dato_set_DarBajaReparto(string anio, string mes, int idCargo, int idEstado, int idUsuario)
+        {
+            Resultado res = new Resultado();
+            try
+            {
+                using (SqlConnection con = new SqlConnection(cadenaCnx))
+                {
+                    con.Open();
+                    SqlTransaction sqlTran = con.BeginTransaction();
+
+                    try
+                    {
+                        using (SqlCommand cmd = new SqlCommand("SP_U_DAR_BAJA_REPARTO", con, sqlTran))
+                        {
+                            cmd.CommandTimeout = 0;
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.Add("@anio", SqlDbType.Int).Value = anio;
+                            cmd.Parameters.Add("@mes", SqlDbType.Int).Value = mes;
+                            cmd.Parameters.Add("@idCargo", SqlDbType.Int).Value = idCargo;
+                            cmd.Parameters.Add("@idEstado", SqlDbType.Int).Value = idEstado;
+                            cmd.Parameters.Add("@idUsuario", SqlDbType.Int).Value = idUsuario;
+
+                            cmd.ExecuteNonQuery();
+                        }
+                        sqlTran.Commit();
+
+                        res.ok = true;
+                        res.data = "OK";
+                    }
+                    catch (Exception ex)
+                    {
+                        sqlTran.Rollback();
+                        res.ok = false;
+                        res.data = ex.Message;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                res.ok = false;
+                res.data = ex.Message;
+            }
+            return res;
+        }
 
 
-       public List<Cambio_Estado_Masivo_E> Capa_Dato_Get_ListaLocales()
+
+
+        public List<Cambio_Estado_Masivo_E> Capa_Dato_Get_ListaLocales()
        {
            try
            {

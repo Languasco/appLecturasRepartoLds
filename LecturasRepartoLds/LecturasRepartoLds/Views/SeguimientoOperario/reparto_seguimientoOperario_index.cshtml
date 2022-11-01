@@ -81,6 +81,14 @@
         background-color: #333 !important;
         color: white !important;
     }
+    #legend {
+        font-family: 'Montserrat', sans-serif !important;
+        background: #fff;
+        padding: 10px;
+        margin: 10px;
+        border: 3px solid #000;
+    }
+
 </style>
 
 <script type="text/javascript">
@@ -284,7 +292,7 @@
                     return;
                 }
             } else {
-                $scope.obj_paramsFormFiltro.fechaReparto = '0';
+                $scope.obj_paramsFormFiltro.fechaReparto = '';
             }
  
 
@@ -493,8 +501,13 @@
                 else {
                     div.innerHTML = '<img src="' + icon + '"> ' + name;
                 }
+ 
                 legend.appendChild(div);
             }
+
+            legend.style.cssText = 'color: black;font-weight: 800; margin-left: 10px!important ; margin-top: 10px !important;';
+
+
             $scope.map.controls[google.maps.ControlPosition.TOP_LEFT].push(legend);
         }
 
@@ -665,7 +678,7 @@
             ContenidoMarker += '<tr><td><strong> Longitud   </strong></td><td> : ' + info.longitud + '</td></tr>';
 
             if (info.tieneFoto == 'SI') {
-                ContenidoMarker += '<tr><td colspan="2" style="text-align:right;"><strong><a onclick="galeriaFotos(' + info.id_Reparto + ');" href="#">Fotos Selfie</a></strong></td></tr>';
+                ContenidoMarker += '<tr><td colspan="2" style="text-align:right;"><strong><a onclick="galeriaFotosRecorrido(' + info.id_operario + ', ' + posicion+');" href="#">Fotos Selfie</a></strong></td></tr>';
             }
             ContenidoMarker += '</table  >';
 
@@ -755,7 +768,7 @@
                 icono = '../Content/Imagen/icon_blue.png',
                 titulo = 'SUMINISTRO';
             }
-            if (info.estado == '5' || info.estado == '5') {
+            else if (info.estado == '5' || info.estado == '5') {
                 icono = '../Content/Imagen/sum_pendiente.png',
                     titulo = 'SUMINISTRO NO VISITADO';
             }
@@ -994,6 +1007,82 @@
                 anio: anio,
                 mes: mes,
                 idCargo: sector,
+            },
+            success: function (res) {
+
+                $("div").remove("#x");
+                var $DivCorre = $('#corre');
+
+                $('#fotos').modal();
+
+                if (res.ok) {
+                    listPhotos = [];
+                    $.each(res.data, function (i, v) {
+                        listPhotos.push({
+                            id: i,
+                            url: res.data[i].url
+                        })
+                    });
+                    $DivCorre.append('<div id="x" class="item active"><img id="imgRotate" src="' + listPhotos[0].url + '" alt="..." style="width: 600px; height: 600PX; text-align: center;" /></div>');
+                } else {
+                    alert(JSON.stringify(res.data))
+                }
+            },
+            error: function (xhr) {
+                alert('Algo salió mal, por favor intente de nuevo.');
+            }
+        });
+    }
+
+    function galeriaFotosRecorrido(id_operario, posicion) {
+
+        let anio = document.getElementById('idAnio').value;
+        let mes = document.getElementById('idMes').value;
+        let sector = document.getElementById('idCargo').value;
+        let fechaReparto = document.getElementById('cboFechaReparto').value;
+ 
+        if (anio == 0 || anio == '0') {
+            new PNotify({
+                title: 'Sistemas',
+                text: 'Seleccione el Año.',
+                type: 'error'
+            });
+            return;
+        }
+
+        if (mes == 0 || mes == '0') {
+            new PNotify({
+                title: 'Sistemas',
+                text: 'Por favor seleccione el Mes',
+                type: 'error'
+            });
+            return;
+        }
+
+        if (sector == 0 || sector == '0') {
+            new PNotify({
+                title: 'Sistemas',
+                text: 'Por favor seleccione el Cargo',
+                type: 'error'
+            });
+            return;
+        }
+
+        posicionActual = 0;
+
+        $.ajax({
+            async: true,
+            beforeSend: function (xhr) { },
+            url: '../Ubicacion_Operarios/get_fotosSeguimientoOperariosReparto',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                idOperario: id_operario,
+                anio: anio,
+                mes: mes,
+                idCargo: sector,
+                fechaReparto: fechaReparto,
+                selfie: (posicion==0)? 'I' : 'F'
             },
             success: function (res) {
 

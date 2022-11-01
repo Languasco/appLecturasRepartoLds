@@ -5,29 +5,29 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_PublishTargetUrl>E:\publicaciones\SistemaReparto_lds</_PublishTargetUrl>
-    <History>True|2022-07-25T16:09:00.0801431Z;True|2022-07-22T08:54:31.6739890-05:00;True|2022-07-21T09:22:15.8363287-05:00;True|2022-07-18T14:36:09.2545711-05:00;True|2022-07-18T10:23:07.2696054-05:00;</History>
+    <History>True|2022-10-14T15:17:13.9520589Z;True|2022-09-19T09:36:55.1646940-05:00;False|2022-09-19T09:36:05.1102999-05:00;False|2022-09-19T09:35:28.8305011-05:00;True|2022-08-19T09:44:51.9875479-05:00;True|2022-08-19T09:42:28.9920695-05:00;True|2022-07-27T11:23:45.0384196-05:00;True|2022-07-25T11:09:00.0801431-05:00;True|2022-07-22T08:54:31.6739890-05:00;True|2022-07-21T09:22:15.8363287-05:00;True|2022-07-18T14:36:09.2545711-05:00;True|2022-07-18T10:23:07.2696054-05:00;</History>
   </PropertyGroup>
   <ItemGroup>
     <File Include="bin/Antlr3.Runtime.dll">
       <publishTime>02/18/2019 12:06:38</publishTime>
     </File>
     <File Include="bin/DSIGE.Dato.dll">
-      <publishTime>07/25/2022 11:08:50</publishTime>
+      <publishTime>10/14/2022 10:17:04</publishTime>
     </File>
     <File Include="bin/DSIGE.Dato.pdb">
-      <publishTime>07/25/2022 11:08:50</publishTime>
+      <publishTime>10/14/2022 10:17:04</publishTime>
     </File>
     <File Include="bin/DSIGE.Modelo.dll">
-      <publishTime>07/21/2022 09:22:04</publishTime>
+      <publishTime>10/14/2022 10:17:03</publishTime>
     </File>
     <File Include="bin/DSIGE.Modelo.pdb">
-      <publishTime>07/21/2022 09:22:04</publishTime>
+      <publishTime>10/14/2022 10:17:03</publishTime>
     </File>
     <File Include="bin/DSIGE.Negocio.dll">
-      <publishTime>07/25/2022 11:08:50</publishTime>
+      <publishTime>10/14/2022 10:17:04</publishTime>
     </File>
     <File Include="bin/DSIGE.Negocio.pdb">
-      <publishTime>07/25/2022 11:08:50</publishTime>
+      <publishTime>10/14/2022 10:17:04</publishTime>
     </File>
     <File Include="bin/EntityFramework.dll">
       <publishTime>02/18/2019 12:06:37</publishTime>
@@ -75,10 +75,10 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>02/18/2019 12:06:38</publishTime>
     </File>
     <File Include="bin/LecturasRepartoLds.dll">
-      <publishTime>07/25/2022 11:08:51</publishTime>
+      <publishTime>10/14/2022 10:17:04</publishTime>
     </File>
     <File Include="bin/LecturasRepartoLds.pdb">
-      <publishTime>07/25/2022 11:08:51</publishTime>
+      <publishTime>10/14/2022 10:17:04</publishTime>
     </File>
     <File Include="bin/Lecturas_BureauVeritasReparto.dll">
       <publishTime>07/13/2022 09:26:21</publishTime>
@@ -1089,7 +1089,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>07/23/2019 15:35:35</publishTime>
     </File>
     <File Include="Content/Imagen/Logo_Veritas.jpeg">
-      <publishTime>08/08/2019 10:31:04</publishTime>
+      <publishTime>08/22/2022 11:29:18</publishTime>
     </File>
     <File Include="Content/Imagen/mapa.png">
       <publishTime>07/20/2022 16:00:36</publishTime>
@@ -1808,6 +1808,18 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
     <File Include="Scripts/_references.js">
       <publishTime>02/18/2019 12:06:34</publishTime>
     </File>
+    <File Include="Temp/Descargas/1_FotosDescarga.zip">
+      <publishTime>09/27/2019 11:19:02</publishTime>
+    </File>
+    <File Include="Temp/Descargas/99_Descarga.zip">
+      <publishTime>09/27/2019 09:11:40</publishTime>
+    </File>
+    <File Include="Temp/pdf/pruebas.pdf">
+      <publishTime>10/01/2019 10:16:37</publishTime>
+    </File>
+    <File Include="Temp/pdf/pruebasxxx.pdf">
+      <publishTime>05/11/2022 16:48:22</publishTime>
+    </File>
     <File Include="Views/ActualizarFechaLectura/ActualizarFechaLectura.cshtml">
       <publishTime>02/18/2019 12:06:36</publishTime>
     </File>
@@ -1837,6 +1849,9 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
     </File>
     <File Include="Views/CambioEstado_Masivo/anularCarga_index.cshtml">
       <publishTime>09/16/2019 15:01:37</publishTime>
+    </File>
+    <File Include="Views/CambioEstado_Masivo/darBaja_index.cshtml">
+      <publishTime>08/15/2022 10:43:53</publishTime>
     </File>
     <File Include="Views/CambioEstado_Masivo/IndexCambioEstado_Masivo.cshtml">
       <publishTime>09/16/2019 15:00:54</publishTime>
@@ -1995,10 +2010,10 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>07/21/2022 12:22:21</publishTime>
     </File>
     <File Include="Views/ReportesReparto/consultaReparto_index.cshtml">
-      <publishTime>07/20/2022 16:07:18</publishTime>
+      <publishTime>09/16/2022 10:19:40</publishTime>
     </File>
     <File Include="Views/ReportesReparto/consultaSuministro_index.cshtml">
-      <publishTime>07/20/2022 16:05:10</publishTime>
+      <publishTime>08/19/2022 12:15:10</publishTime>
     </File>
     <File Include="Views/ResultadosLectura/index_ResultadosLecturas.cshtml">
       <publishTime>02/18/2019 12:06:36</publishTime>
@@ -2037,7 +2052,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>02/18/2019 12:06:36</publishTime>
     </File>
     <File Include="Views/SeguimientoOperario/reparto_seguimientoOperario_index.cshtml">
-      <publishTime>07/25/2022 10:53:26</publishTime>
+      <publishTime>08/19/2022 11:36:45</publishTime>
     </File>
     <File Include="Views/SeguimientoOperario/SeguimientoOperario.cshtml">
       <publishTime>07/16/2022 16:41:45</publishTime>
@@ -2079,7 +2094,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>08/21/2019 11:16:59</publishTime>
     </File>
     <File Include="Views/Ubicacion_Operarios/ubicacionOperario_index.cshtml">
-      <publishTime>07/25/2022 09:35:02</publishTime>
+      <publishTime>08/19/2022 11:38:24</publishTime>
     </File>
     <File Include="Views/unidad_lectura/unidad_lectura_index.cshtml">
       <publishTime>08/06/2019 16:40:08</publishTime>
